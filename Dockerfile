@@ -12,9 +12,9 @@ COPY --from=bedtools /usr/local/bin/bedtools ./bedtools
 
 ### Install Java and Nextflow
 RUN apt-get update -qq -y && apt-get install -y curl wget && rm -rf /var/lib/apt/lists/* && apt-get clean
-RUN wget https://download.oracle.com/java/18/latest/jdk-18_linux-x64_bin.tar.gz
-RUN tar xzf jdk-18_linux-x64_bin.tar.gz
-ENV JAVA_HOME=/usr/local/bin/jdk-18.0.1.1/
+RUN wget https://download.oracle.com/java/18/archive/jdk-18.0.2_linux-x64_bin.tar.gz
+RUN tar xzf jdk-18.0.2_linux-x64_bin.tar.gz && rm jdk-18.0.2_linux-x64_bin.tar.gz
+ENV JAVA_HOME=/usr/local/bin/jdk-18.0.2/
 RUN update-alternatives --install /usr/bin/java java ${JAVA_HOME%*/}/bin/java 20000
 RUN update-alternatives --install /usr/bin/javac javac ${JAVA_HOME%*/}/bin/javac 20000
 RUN java -version
