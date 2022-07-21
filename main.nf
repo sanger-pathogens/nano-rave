@@ -46,6 +46,20 @@ def validate_parameters() {
         errors += 1
     }
 
+    if (!params.skip_qc) {
+        if (params.sequence_summary_file) {
+            sequence_summary_file=file(params.sequence_summary_file)
+            if (!sequence_summary_file.exists()) {
+                log.error("The sequence summary file specified does not exist.")
+                errors += 1
+            }
+        }
+        else {
+            log.error("No sequence summary file specified. Please specify one using the --sequence_summary_file option.")
+            errors += 1
+        }
+    }
+
     if (errors > 0) {
         log.error(String.format("%d errors detected", errors))
         exit 1
@@ -54,15 +68,42 @@ def validate_parameters() {
 
 process CAT_FASTQS {
     input:
-        val(fastq_dir)
+        val(fastqs)
         val(sample_name)
     output:
         path("${fastq_file}"), emit: full_fastq_file
     script:
         fastq_file="${sample_name}.fastq.gz"
         """
-        zcat ${workflow.projectDir}/$fastq_dir/*.fastq.gz > ${sample_name}.fastq
+        zcat ${fastqs}/*.fastq.gz > ${sample_name}.fastq
         gzip ${sample_name}.fastq
+        """
+}
+
+process NANOPLOT_QC {
+    publishDir "${params.results_dir}/qc/nanoplot", mode: 'copy', overwrite: true
+    input:
+        path(fastq_file)
+    output:
+        path("${nanoplot_qc_dir}/*")
+    script:
+        nanoplot_qc_dir="${params.sample_name}_nanoplot_qc"
+        """
+        NanoPlot -t 2 --fastq $fastq_file -o ${params.sample_name}_nanoplot_qc
+        """
+
+}
+
+process PYCOQC {
+    publishDir "${params.results_dir}/qc/pycoqc/${params.sample_name}", mode: 'copy', overwrite: true
+    input:
+        path(sequence_summary_file)
+    output:
+        path("*.html")
+        path("*.json")
+    script:
+        """
+        pycoQC -f $sequence_summary_file -o ${params.sample_name}_pycoqc.html -j ${params.sample_name}_pycoqc.json
         """
 }
 
@@ -207,7 +248,14 @@ workflow {
         ref_path_ch = manifest_ch.splitCsv(header: true, sep: ',')
             .map{ row -> tuple(row.reference_id, file(row.reference_path)) }
 
+
     CAT_FASTQS(params.fastq_dir, params.sample_name)
+
+    if (!params.skip_qc) {
+        sequence_summary_file = Channel.fromPath(params.sequence_summary_file)
+        NANOPLOT_QC(CAT_FASTQS.out.full_fastq_file)
+        PYCOQC(sequence_summary_file)
+    }
 
     GET_CHROM_SIZES_AND_INDEX(ref_path_ch)
 
