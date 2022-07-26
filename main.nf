@@ -81,6 +81,7 @@ process CAT_FASTQS {
 }
 
 process NANOPLOT_QC {
+    container "quay.io/biocontainers/nanoplot:1.38.0--pyhdfd78af_0"
     publishDir "${params.results_dir}/qc/nanoplot", mode: 'copy', overwrite: true
     input:
         path(fastq_file)
@@ -95,6 +96,7 @@ process NANOPLOT_QC {
 }
 
 process PYCOQC {
+    container "quay.io/biocontainers/pycoqc:2.5.2--py_0"
     publishDir "${params.results_dir}/qc/pycoqc/${params.sample_name}", mode: 'copy', overwrite: true
     input:
         path(sequence_summary_file)
@@ -108,6 +110,7 @@ process PYCOQC {
 }
 
 process GET_CHROM_SIZES_AND_INDEX {
+    container "quay.io/biocontainers/samtools:1.13--h8c37831_0"
     input:
         tuple val(ref_id), path(reference)
     output:
@@ -122,6 +125,7 @@ process GET_CHROM_SIZES_AND_INDEX {
 }
 
 process MINIMAP2_INDEX {
+    container "quay.io/biocontainers/minimap2:2.17--hed695b0_3"
     input:
         tuple val(ref_id), path(reference)
         tuple val(ref_id), path(sizes)
@@ -136,6 +140,7 @@ process MINIMAP2_INDEX {
 }
 
 process MINIMAP2_ALIGN {
+    container "quay.io/biocontainers/minimap2:2.17--hed695b0_3"
     input:
         path(mm2_index)
         tuple val(ref_id), path(reference)
@@ -153,6 +158,7 @@ process MINIMAP2_ALIGN {
 }
 
 process SAMTOOLS_VIEW_SAM_TO_BAM {
+    container "quay.io/biocontainers/samtools:1.15.1--h1170115_0"
     input:
         path(sam_file)
         tuple val(ref_id), path(reference)
@@ -168,6 +174,7 @@ process SAMTOOLS_VIEW_SAM_TO_BAM {
 }
 
 process SAMTOOLS_SORT_AND_INDEX {
+    container "quay.io/biocontainers/samtools:1.15.1--h1170115_0"
     input:
         path(bam_file)
         tuple val(ref_id), path(reference)
@@ -185,6 +192,7 @@ process SAMTOOLS_SORT_AND_INDEX {
 }
 
 process BEDTOOLS_GENOMECOV {
+    container "quay.io/biocontainers/bedtools:2.29.2--hc088bd4_0"
     publishDir "${params.results_dir}/genome_coverage", mode: 'copy', overwrite: true, pattern: "*.bedGraph"
     input:
         path(sorted_bam_file)
@@ -201,6 +209,7 @@ process BEDTOOLS_GENOMECOV {
 }
 
 process SNIFFLES_VARIANT_CALLING {
+    container "quay.io/biocontainers/sniffles:1.0.12--h8b12597_1"
     input:
         path(sorted_bam_file)
         path(sorted_bam_index)
@@ -220,6 +229,7 @@ process SNIFFLES_VARIANT_CALLING {
 }
 
 process BGZIP_AND_INDEX_VCF {
+    container "quay.io/biocontainers/tabix:1.11--hdfd78af_0"
     publishDir "${params.results_dir}/variant_calling", mode: 'copy', overwrite: true
     input:
         path(vcf_file)
