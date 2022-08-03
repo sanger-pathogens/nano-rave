@@ -39,6 +39,17 @@ def validate_parameters() {
         errors += 1
     }
 
+    def variant_caller_list = ["medaka", "freebayes"]
+    if (params.variant_caller) {
+        if (!variant_caller_list.any { it.contains(params.variant_caller.toString()) }) {
+            log.error("Please specify the variant caller as medaka or freebayes using the --variant_caller option.")
+            errors += 1
+        }
+    }
+    else {
+        log.error("Please specify a variant caller using the --variant_caller option")
+        errors += 1
+    }
 
     if (errors > 0) {
         log.error(String.format("%d errors detected", errors))
@@ -195,19 +206,37 @@ process BEDTOOLS_GENOMECOV {
         """
 }
 
-process SNIFFLES_VARIANT_CALLING {
-    container "quay.io/biocontainers/sniffles:1.0.12--h8b12597_1"
+process MEDAKA_VARIANT_CALLING {
+    container "quay.io/biocontainers/medaka:1.4.4--py38h130def0_0"
     input:
         path(sorted_bam_file)
-        path(sorted_bam_index)
-
+        path(reference_list)
     output:
         path("*.vcf"), emit: vcf_ch
-
     script:
         """
         filename=\$(basename $sorted_bam_file | awk -F "." '{ print \$1}')
-        sniffles -m $sorted_bam_file -v \${filename}.vcf
+        ref_id=\$(echo \$filename | awk -F "_" '{ print \$NF }')
+        medaka_variant -f *\${ref_id}.fasta -i $sorted_bam_file
+        mv medaka_variant/round_1.vcf \${filename}.vcf
+        # sort vcf by index to stop tabix crying
+        cat \${filename}.vcf | awk '\$1 ~ /^#/ {print \$0;next} {print \$0 | "sort -k1,1 -k2,2n"}' > \${filename}_sorted.vcf
+        mv \${filename}_sorted.vcf \${filename}.vcf
+        """
+}
+
+process FREEBAYES_VARIANT_CALLING {
+    container "docker.io/gfanz/freebayes@sha256:d32bbce0216754bfc7e01ad6af18e74df3950fb900de69253107dc7bcf4e1351"
+    input:
+        path(sorted_bam_file)
+        path(reference_list)
+    output:
+        path("*.vcf"), emit: vcf_ch
+    script:
+        """
+        filename=\$(basename $sorted_bam_file | awk -F "." '{ print \$1}')
+        ref_id=\$(echo \$filename | awk -F "_" '{ print \$NF }')
+        freebayes -f *\${ref_id}.fasta  $sorted_bam_file > \${filename}.vcf
         # sort vcf by index to stop tabix crying
         cat \${filename}.vcf | awk '\$1 ~ /^#/ {print \$0;next} {print \$0 | "sort -k1,1 -k2,2n"}' > \${filename}_sorted.vcf
         mv \${filename}_sorted.vcf \${filename}.vcf
@@ -261,10 +290,19 @@ workflow NANOSEQ {
     BEDTOOLS_GENOMECOV(SAMTOOLS_SORT_AND_INDEX.out.sorted_bam,
                        SAMTOOLS_SORT_AND_INDEX.out.sorted_bam_index)
 
-    SNIFFLES_VARIANT_CALLING(SAMTOOLS_SORT_AND_INDEX.out.sorted_bam,
-                             SAMTOOLS_SORT_AND_INDEX.out.sorted_bam_index)
+    if (params.variant_caller == "medaka") {
+        MEDAKA_VARIANT_CALLING(SAMTOOLS_SORT_AND_INDEX.out.sorted_bam,
+                               MINIMAP2_INDEX.out.ref_ch.collect())
+        BGZIP_AND_INDEX_VCF(MEDAKA_VARIANT_CALLING.out.vcf_ch)
+    }
 
-    BGZIP_AND_INDEX_VCF(SNIFFLES_VARIANT_CALLING.out.vcf_ch)
+    if (params.variant_caller == "freebayes") {
+        FREEBAYES_VARIANT_CALLING(SAMTOOLS_SORT_AND_INDEX.out.sorted_bam,
+                                  MINIMAP2_INDEX.out.ref_ch.collect())
+        BGZIP_AND_INDEX_VCF(FREEBAYES_VARIANT_CALLING.out.vcf_ch)
+    }
+
+
 }
 
 workflow {
