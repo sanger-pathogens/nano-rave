@@ -1,5 +1,7 @@
 #!/usr/bin/env nextflow
 
+nextflow.enable.dsl = 2
+
 def printHelp() {
     log.info """
     Usage:
@@ -39,10 +41,10 @@ def validate_parameters() {
         errors += 1
     }
 
-    def variant_caller_list = ["medaka", "freebayes"]
+    def variant_caller_list = ["medaka", "medaka_haploid", "freebayes"]
     if (params.variant_caller) {
         if (!variant_caller_list.any { it.contains(params.variant_caller.toString()) }) {
-            log.error("Please specify the variant caller as medaka or freebayes using the --variant_caller option.")
+            log.error("Please specify the variant caller using the --variant_caller option. Possibilities are $variant_caller_list")
             errors += 1
         }
     }
@@ -217,13 +219,38 @@ process MEDAKA_VARIANT_CALLING {
         """
         filename=\$(basename $sorted_bam_file | awk -F "." '{ print \$1}')
         ref_id=\$(echo \$filename | awk -F "_" '{ print \$NF }')
+
         medaka_variant -f *\${ref_id}.fasta -i $sorted_bam_file
+
         mv medaka_variant/round_1.vcf \${filename}.vcf
+
         # sort vcf by index to stop tabix crying
         cat \${filename}.vcf | awk '\$1 ~ /^#/ {print \$0;next} {print \$0 | "sort -k1,1 -k2,2n"}' > \${filename}_sorted.vcf
         mv \${filename}_sorted.vcf \${filename}.vcf
         """
 }
+
+process MEDAKA_HAPLOID_VARIANT_CALLING {
+    container "quay.io/biocontainers/medaka:1.4.4--py38h130def0_0"
+    input:
+        path(fastq)
+        tuple val(ref_id), path(reference)
+    output:
+        path("*.vcf"), emit: vcf_ch
+    script:
+        """
+        filename=\$(basename ${fastq} | awk -F "." '{ print \$1}')
+
+        medaka_haploid_variant -r ${reference} -i ${fastq}
+
+        mv medaka/medaka.annotated.vcf \${filename}.vcf
+
+        # sort vcf by index to stop tabix crying
+        cat \${filename}.vcf | awk '\$1 ~ /^#/ {print \$0;next} {print \$0 | "sort -k1,1 -k2,2n"}' > \${filename}_sorted.vcf
+        mv \${filename}_sorted.vcf \${filename}.vcf
+        """
+}
+
 
 process FREEBAYES_VARIANT_CALLING {
     container "docker.io/gfanz/freebayes@sha256:d32bbce0216754bfc7e01ad6af18e74df3950fb900de69253107dc7bcf4e1351"
@@ -275,20 +302,31 @@ workflow NANOSEQ {
 
     GET_CHROM_SIZES_AND_INDEX(ref_path_ch)
 
-    MINIMAP2_INDEX(GET_CHROM_SIZES_AND_INDEX.out.ref_ch,
-                   GET_CHROM_SIZES_AND_INDEX.out.sizes_ch)
+    MINIMAP2_INDEX(
+        GET_CHROM_SIZES_AND_INDEX.out.ref_ch,
+        GET_CHROM_SIZES_AND_INDEX.out.sizes_ch
+    )
 
-    MINIMAP2_ALIGN(MINIMAP2_INDEX.out.mm2_index_ch,
-                   MINIMAP2_INDEX.out.ref_ch,
-                   fastq_ch.collect(),
-                   MINIMAP2_INDEX.out.sizes_ch)
+    MINIMAP2_ALIGN(
+        MINIMAP2_INDEX.out.mm2_index_ch,
+        MINIMAP2_INDEX.out.ref_ch,
+        fastq_ch.collect(),
+        MINIMAP2_INDEX.out.sizes_ch
+    )
 
     SAMTOOLS_VIEW_SAM_TO_BAM(MINIMAP2_ALIGN.out.sam_file.flatMap())
 
     SAMTOOLS_SORT_AND_INDEX(SAMTOOLS_VIEW_SAM_TO_BAM.out.bam_file)
 
-    BEDTOOLS_GENOMECOV(SAMTOOLS_SORT_AND_INDEX.out.sorted_bam,
-                       SAMTOOLS_SORT_AND_INDEX.out.sorted_bam_index)
+    BEDTOOLS_GENOMECOV(
+        SAMTOOLS_SORT_AND_INDEX.out.sorted_bam,
+        SAMTOOLS_SORT_AND_INDEX.out.sorted_bam_index
+    )
+
+    if (params.variant_caller == "medaka_haploid"){
+        MEDAKA_HAPLOID_VARIANT_CALLING(fastq_ch.flatMap(), GET_CHROM_SIZES_AND_INDEX.out.ref_ch)
+        BGZIP_AND_INDEX_VCF(MEDAKA_HAPLOID_VARIANT_CALLING.out.vcf_ch)
+    }
 
     if (params.variant_caller == "medaka") {
         MEDAKA_VARIANT_CALLING(SAMTOOLS_SORT_AND_INDEX.out.sorted_bam,
@@ -301,8 +339,6 @@ workflow NANOSEQ {
                                   MINIMAP2_INDEX.out.ref_ch.collect())
         BGZIP_AND_INDEX_VCF(FREEBAYES_VARIANT_CALLING.out.vcf_ch)
     }
-
-
 }
 
 workflow {
