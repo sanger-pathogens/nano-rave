@@ -233,24 +233,20 @@ process MEDAKA_VARIANT_CALLING {
 process MEDAKA_HAPLOID_VARIANT_CALLING {
     container "quay.io/biocontainers/medaka:1.4.4--py38h130def0_0"
     input:
-        path(fastq)
-        tuple val(ref_id), path(reference)
+        tuple path(fastq), val(ref_id), path(reference)
     output:
         path("*.vcf"), emit: vcf_ch
     script:
         """
-        filename=\$(basename ${fastq} | awk -F "." '{ print \$1}')
+        filename=\$(basename ${fastq} | awk -F '.' '{ print \$1}')_${ref_id}
 
         medaka_haploid_variant -r ${reference} -i ${fastq}
-
         mv medaka/medaka.annotated.vcf \${filename}.vcf
-
         # sort vcf by index to stop tabix crying
         cat \${filename}.vcf | awk '\$1 ~ /^#/ {print \$0;next} {print \$0 | "sort -k1,1 -k2,2n"}' > \${filename}_sorted.vcf
         mv \${filename}_sorted.vcf \${filename}.vcf
         """
 }
-
 
 process FREEBAYES_VARIANT_CALLING {
     container "docker.io/gfanz/freebayes@sha256:d32bbce0216754bfc7e01ad6af18e74df3950fb900de69253107dc7bcf4e1351"
@@ -324,7 +320,7 @@ workflow NANOSEQ {
     )
 
     if (params.variant_caller == "medaka_haploid"){
-        MEDAKA_HAPLOID_VARIANT_CALLING(fastq_ch.flatMap(), GET_CHROM_SIZES_AND_INDEX.out.ref_ch)
+        MEDAKA_HAPLOID_VARIANT_CALLING(fastq_ch.flatMap().combine(ref_path_ch))
         BGZIP_AND_INDEX_VCF(MEDAKA_HAPLOID_VARIANT_CALLING.out.vcf_ch)
     }
 
