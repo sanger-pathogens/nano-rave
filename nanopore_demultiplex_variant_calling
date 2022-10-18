@@ -1,4 +1,0 @@
-#! /usr/bin/env bash
-
-# This wrapper is in place until we can figure out how to allow users to simply run `nextflow run gitlab/nanopore_demultiplex_variant_calling` on the farm
-nextflow run main.nf $@
