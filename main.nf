@@ -204,7 +204,7 @@ process BEDTOOLS_GENOMECOV {
     script:
         """
         filename=\$(basename $sorted_bam_file | awk -F "." '{ print \$1}')
-        bedtools genomecov -split -ibam $sorted_bam_file -bg | bedtools sort > \${filename}.bedGraph
+        bedtools genomecov -split -ibam $sorted_bam_file -bga | bedtools sort > \${filename}.bedGraph
         """
 }
 
