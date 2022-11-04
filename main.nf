@@ -9,49 +9,91 @@ def printHelp() {
 
     Options:
         --sequencing_manifest        Manifest containing paths to sequencing directories and sequencing summary files (mandatory)
-        --results_dir                Specify results directory - default nextflow_results (optional)
+        --reference_manifest         Manifest containing reference identifiers and paths to fastq reference files (mandatory)
+        --results_dir                Specify results directory [default: ./nextflow_results] (optional)
+        --variant_caller             Specify a variant caller to use [medaka (default), medaka_haploid, freebayes] (optional)
+        --min_barcode_dir_size           Specify the expected minimum size of the barcode directories, in MB [default: 10] (optional)
         --help                       Print this help message (optional)
     """.stripIndent()
+}
+
+def validate_path_param(
+    param_option, 
+    param, 
+    type="file", 
+    mandatory=true) 
+{
+    valid_types=["file", "directory"]
+    if (!valid_types.any { it == type }) {
+            log.error("Invalid type '${type}'. Possibilities are ${valid_types}.")
+            return 1
+    }
+    param_name = (param_option - "--").replaceAll("_", " ")
+    if (param) {
+        def file_param = file(param)
+        if (!file_param.exists()) {
+            log.error("The given ${param_name} '${param}' does not exist.")
+            return 1
+        } else if (
+              (type == "file" && !file_param.isFile())
+              ||
+              (type == "directory" && !file_param.isDirectory())
+          ) {
+            log.error("The given ${param_name} '${param}' is not a ${type}.")
+            return 1
+        }
+    } else if (mandatory) {
+        log.error("No ${param_name} specified. Please specify one using the ${param_option} option.")
+        return 1
+    }
+    return 0
+}
+
+def validate_choice_param(param_option, param, choices) {
+    param_name = (param_option - "--").replaceAll("_", " ")
+    if (param) {
+        if (!choices.any { it.contains(param.toString()) }) {
+            log.error("Please specify the ${param_name} using the ${param_option} option. Possibilities are ${choices}.")
+            return 1
+        }
+    } else {
+        log.error("Please specify the ${param_name} using the ${param_option} option")
+        return 1
+    }
+    return 0
+}
+
+def validate_number_param(param_option, param) {
+    param_name = (param_option - "--").replaceAll("_", " ")
+    if (param != null) /* Explicit comparison with null, because 0 is an acceptable value */ {
+        if (!(param instanceof Number)) {
+            log.error("The ${param_name} specified with the ${param_option} option must be a valid number")
+            return 1
+        }
+    } else {
+        log.error("Please specify the ${param_name} using the ${param_option} option")
+        return 1
+    }
+    return 0
+}
+
+def validate_results_dir(results_dir) {
+    results_dir = file(results_dir)
+    if (results_dir.exists() && !results_dir.isDirectory()) {
+        log.error("The given results_dir '${results_dir}' is not a directory.")
+        return 1
+    }
+    return 0
 }
 
 def validate_parameters() {
     def errors = 0
 
-    if (params.reference_manifest) {
-        reference_manifest=file(params.reference_manifest)
-        if (!reference_manifest.exists()) {
-            log.error("The manifest file specified does not exist.")
-            errors += 1
-        }
-    }
-    else {
-        log.error("No reference manifest file specified. Please specify one using the --reference_manifest option.")
-        errors += 1
-    }
-
-    if (params.sequencing_manifest) {
-        sequencing_manifest=file(params.sequencing_manifest)
-        if (!sequencing_manifest.exists()) {
-            log.error("The sequencing manifest file specified does not exist.")
-            errors += 1
-        }
-    }
-    else {
-        log.error("No sequencing manifest file specified. Please specify one using the --sequencing_manifest option.")
-        errors += 1
-    }
-
-    def variant_caller_list = ["medaka", "medaka_haploid", "freebayes"]
-    if (params.variant_caller) {
-        if (!variant_caller_list.any { it.contains(params.variant_caller.toString()) }) {
-            log.error("Please specify the variant caller using the --variant_caller option. Possibilities are $variant_caller_list")
-            errors += 1
-        }
-    }
-    else {
-        log.error("Please specify a variant caller using the --variant_caller option")
-        errors += 1
-    }
+    errors += validate_path_param("--reference_manifest", params.reference_manifest)
+    errors += validate_path_param("--sequencing_manifest", params.sequencing_manifest)
+    errors += validate_choice_param("--variant_caller", params.variant_caller, ["medaka", "medaka_haploid", "freebayes"])
+    errors += validate_number_param("--min_barcode_dir_size", params.min_barcode_dir_size)
+    errors += validate_results_dir(params.results_dir)
 
     if (errors > 0) {
         log.error(String.format("%d errors detected", errors))
@@ -60,22 +102,25 @@ def validate_parameters() {
 }
 
 process SORT_FASTQS {
+    /* Checks each barcode directory contains sufficient reads and concatenates fastq.gz files for further processing */
     input:
         tuple val(sequencing_dir), val(sequence_summary_file)
     output:
         path("*.fastq.gz"), emit: full_fastq_files
     script:
         """
-        threshold=10
+        threshold=${params.min_barcode_dir_size}
         sample_name=\$(echo $sequencing_dir | awk -F "/" '{ print \$(NF-1) }')
         echo \$sample_name
         for dir in ${sequencing_dir}/fastq_pass/barcode*
         do
-          disk_usage=\$(du -shm \$dir | awk '{ print \$1 }')
-          if [ "\${disk_usage}" -gt "\${threshold}" ]
+          barcode=\$(echo \${dir} | awk -F "/" '{ print \$NF }')
+          disk_usage=\$(du --apparent-size -shm \$dir | awk '{ print \$1 }')
+          if [ "\${disk_usage}" -ge "\${threshold}" ]
           then
-            barcode=\$(echo \${dir} | awk -F "/" '{ print \$NF }')
             zcat \${dir}/*.fastq.gz > \${sample_name}_\${barcode}.fastq
+          else
+            echo "WARN: Skipping '\${barcode}' directory '\${dir}' as it contains <\${threshold}MB of fastq.gz files." >&2
           fi
         done
         gzip *.fastq
@@ -113,7 +158,7 @@ process PYCOQC {
 }
 
 process GET_CHROM_SIZES_AND_INDEX {
-    container "quay.io/biocontainers/samtools:1.13--h8c37831_0"
+    container "quay.io/biocontainers/samtools:1.15.1--h1170115_0"
     input:
         tuple val(ref_id), path(reference)
     output:
@@ -347,7 +392,7 @@ workflow {
 
     sequencing_manifest = Channel.fromPath(params.sequencing_manifest)
     sequence_ch = sequencing_manifest.splitCsv(header: true, sep: ',')
-                    .map{ row -> tuple(row.sequencing_dir, row.sequence_summary_file) }
+                    .map{ row -> tuple(file(row.sequencing_dir), file(row.sequence_summary_file)) }
 
     SORT_FASTQS(sequence_ch)
 

@@ -1,2 +1,7 @@
 .idea
 venv
+*.swp
+*.img
+.nextflow*
+work
+.nf-test
