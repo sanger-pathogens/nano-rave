@@ -1,0 +1,77 @@
+// Helper function to compute md5 of gzipped file contents
+// TODO Better to eventually put this in a utils module
+def get_gzip_md5(filepath) {
+    def proc = "zcat ${filepath}".execute() | 'md5sum'.execute() | ['awk', '{ print $1 }'].execute()
+    def serr = new StringBuffer()
+    proc.consumeProcessErrorStream(serr)
+    proc.waitForOrKill(1000)
+    def file_md5 = proc.text.strip()
+    assert proc.exitValue() == 0
+    assert serr.toString() == ""                    
+    return file_md5
+}
+
+nextflow_process {
+
+    name "Test Process SORT_FASTQS"
+    script "main.nf"
+    process "SORT_FASTQS"
+
+    test("Should run without failures") {
+        //TODO Is it possible to use introspection to fill in the process name in string below from above var?
+        def inputs = new File("test_data/SORT_FASTQS/inputs")
+        def outputs = new File("test_data/SORT_FASTQS/outputs")
+        def sequencing_dir = new File(inputs, "sample/sequencing_dir")
+        def sequencing_summary_file = new File(inputs, "sequencing_summary.txt")
+        def output_fastq_1 = new File(outputs, "sample_barcode01.fastq.gz")
+        def output_fastq_2 = new File(outputs, "sample_barcode02.fastq.gz")
+
+        when {
+            process {
+                """
+                sequencing_dir_str = "${sequencing_dir.getCanonicalPath()}"
+                sequencing_summary_file_str = "${sequencing_summary_file.getCanonicalPath()}"
+                input[0] = tuple(sequencing_dir_str, sequencing_summary_file_str)
+                """
+            }
+        }
+
+        then {
+            // Setup expected values
+            def expected_files = [output_fastq_1, output_fastq_2]
+            def expected_num_files = expected_files.size()
+
+            // Check process succeeded
+            assert process.success
+
+            // Check number of tasks executed
+            assert process.trace.tasks().size() == 1
+
+            with(process.out) {
+                // Check num elements in output channel
+                assert full_fastq_files.size() == 1  
+                def file_list = full_fastq_files.flatten()
+                assert file_list.size() == expected_num_files  
+
+                // Check output files
+                // TODO: nf-test seems to define its own `file` and `path` functions, meaning we have to convert each file in the output array to a string, then back to an nf-test specific `file` for it to be interpreted correctly as a file :/ Check this is actually the case
+                def output_files = file_list.collect { file(it.toString()) }
+                def output_filenames = output_files.collect { it.getName() }
+                expected_files.each { expected_file ->
+                    // Check filenames
+                    expected_filename = expected_file.getName()
+                    //assert expected_filename in output_filenames
+                    def found_file = output_files.find { it.getName() ==~ /^${expected_filename}$/ }
+                    assert found_file : "Expected filename ${expected_filename} was not found among output files ${output_filenames}"
+
+                    // Check MD5 checksums
+                    def found_file_md5 = get_gzip_md5(found_file)
+                    def expected_file_md5 = get_gzip_md5(expected_file)
+                    assert found_file_md5 == expected_file_md5
+                }
+            }
+        }
+
+    }
+
+}
