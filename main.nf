@@ -139,7 +139,6 @@ process NANOPLOT_QC {
         sample=\$(basename $fastq_file | awk -F "." '{ print \$1}')
         NanoPlot -t 2 --fastq $fastq_file -o \${sample}_nanoplot_qc
         """
-
 }
 
 process PYCOQC {
@@ -162,13 +161,11 @@ process GET_CHROM_SIZES_AND_INDEX {
     input:
         tuple val(ref_id), path(reference)
     output:
-        tuple val(ref_id), path("*.sizes"), emit: sizes_ch
-        tuple val(ref_id), path("*.fai"), emit: fasta_index_ch
+        path("*.fai"), emit: fasta_index_ch
         tuple val(ref_id), path(reference), emit: ref_ch
     script:
         """
         samtools faidx ${reference}
-        cut -f 1,2 ${reference}.fai > ${reference}.sizes
         """
 }
 
@@ -176,11 +173,9 @@ process MINIMAP2_INDEX {
     container "quay.io/biocontainers/minimap2:2.17--hed695b0_3"
     input:
         tuple val(ref_id), path(reference)
-        tuple val(ref_id), path(sizes)
     output:
         path("*.mmi"), emit: mm2_index_ch
-        path(reference), emit: ref_ch
-        path(sizes), emit: sizes_ch
+        tuple val(ref_id), path(reference), emit: ref_ch
     script:
         """
         minimap2 -ax map-ont -t 2 -d ${reference}.mmi ${reference}
@@ -190,30 +185,28 @@ process MINIMAP2_INDEX {
 process MINIMAP2_ALIGN {
     container "quay.io/biocontainers/minimap2:2.17--hed695b0_3"
     input:
+        tuple val(ref_id), path(reference)
         path(mm2_index)
-        path(reference)
-        path(fastq_file_list)
-        path(sizes)
+        each path(fastq)
     output:
         path("*.sam"), emit: sam_file
+        tuple val(ref_id), path(reference), emit: ref_ch
     script:
         """
         ref_id=\$(echo $reference | awk -F "seq_" '{ print \$NF }' | sed 's|.fasta||g')
-        for f in ${fastq_file_list}
-        do
-          fname=\$(basename \$f | awk -F "." '{ print \$1}')
-          minimap2 -ax map-ont --MD -t 2 $mm2_index \$f > \${fname}_\${ref_id}.sam
-        done
+        fname=\$(basename $fastq | awk -F "." '{ print \$1}')
+        minimap2 -ax map-ont --MD -t 2 $mm2_index $fastq > \${fname}_\${ref_id}.sam
         """
-
 }
 
 process SAMTOOLS_VIEW_SAM_TO_BAM {
     container "quay.io/biocontainers/samtools:1.15.1--h1170115_0"
     input:
+        tuple val(ref_id), path(reference)
         path(sam_file)
     output:
         path("*.bam"), emit: bam_file
+        tuple val(ref_id), path(reference), emit: ref_ch
     script:
         """
         filename=\$(basename $sam_file | awk -F "." '{ print \$1}')
@@ -224,10 +217,12 @@ process SAMTOOLS_VIEW_SAM_TO_BAM {
 process SAMTOOLS_SORT_AND_INDEX {
     container "quay.io/biocontainers/samtools:1.15.1--h1170115_0"
     input:
+        tuple val(ref_id), path(reference)
         path(bam_file)
     output:
         path("*.sorted.bam"), emit: sorted_bam
         path("*.sorted.bam.bai"), emit: sorted_bam_index
+        tuple val(ref_id), path(reference), emit: ref_ch
     script:
         """
         filename=\$(basename $bam_file | awk -F "." '{ print \$1}')
@@ -256,16 +251,15 @@ process BEDTOOLS_GENOMECOV {
 process MEDAKA_VARIANT_CALLING {
     container "quay.io/biocontainers/medaka:1.4.4--py38h130def0_0"
     input:
+        tuple val(ref_id), path(reference)
         path(sorted_bam_file)
-        path(reference_list)
     output:
         path("*.vcf"), emit: vcf_ch
     script:
         """
         filename=\$(basename $sorted_bam_file | awk -F "." '{ print \$1}')
-        ref_id=\$(echo \$filename | awk -F "_" '{ print \$NF }')
-
-        medaka_variant -f *\${ref_id}.fasta -i $sorted_bam_file
+        
+        medaka_variant -f ${reference} -i ${sorted_bam_file}
 
         mv medaka_variant/round_1.vcf \${filename}.vcf
 
@@ -278,7 +272,8 @@ process MEDAKA_VARIANT_CALLING {
 process MEDAKA_HAPLOID_VARIANT_CALLING {
     container "quay.io/biocontainers/medaka:1.4.4--py38h130def0_0"
     input:
-        tuple path(fastq), val(ref_id), path(reference)
+        tuple val(ref_id), path(reference)
+        each path(fastq)
     output:
         path("*.vcf"), emit: vcf_ch
     script:
@@ -286,25 +281,28 @@ process MEDAKA_HAPLOID_VARIANT_CALLING {
         filename=\$(basename ${fastq} | awk -F '.' '{ print \$1}')_${ref_id}
 
         medaka_haploid_variant -r ${reference} -i ${fastq}
-        mv medaka/medaka.annotated.vcf \${filename}.vcf
+
+        mv medaka/medaka.annotated.vcf \${filename}_${ref_id}.vcf
+
         # sort vcf by index to stop tabix crying
-        cat \${filename}.vcf | awk '\$1 ~ /^#/ {print \$0;next} {print \$0 | "sort -k1,1 -k2,2n"}' > \${filename}_sorted.vcf
-        mv \${filename}_sorted.vcf \${filename}.vcf
+        cat \${filename}_${ref_id}.vcf | awk '\$1 ~ /^#/ {print \$0;next} {print \$0 | "sort -k1,1 -k2,2n"}' > \${filename}_sorted.vcf
+        mv \${filename}_sorted.vcf \${filename}_${ref_id}.vcf
         """
 }
 
 process FREEBAYES_VARIANT_CALLING {
     container "docker.io/gfanz/freebayes@sha256:d32bbce0216754bfc7e01ad6af18e74df3950fb900de69253107dc7bcf4e1351"
     input:
+        tuple val(ref_id), path(reference)
         path(sorted_bam_file)
-        path(reference_list)
     output:
         path("*.vcf"), emit: vcf_ch
     script:
         """
-        filename=\$(basename $sorted_bam_file | awk -F "." '{ print \$1}')
-        ref_id=\$(echo \$filename | awk -F "_" '{ print \$NF }')
-        freebayes -f *\${ref_id}.fasta  $sorted_bam_file > \${filename}.vcf
+        filename=\$(basename ${sorted_bam_file} | awk -F "." '{ print \$1}')
+        
+        freebayes -f ${reference} ${sorted_bam_file} > \${filename}.vcf
+        
         # sort vcf by index to stop tabix crying
         cat \${filename}.vcf | awk '\$1 ~ /^#/ {print \$0;next} {print \$0 | "sort -k1,1 -k2,2n"}' > \${filename}_sorted.vcf
         mv \${filename}_sorted.vcf \${filename}.vcf
@@ -330,56 +328,59 @@ process BGZIP_AND_INDEX_VCF {
 }
 
 workflow NANOSEQ {
-
     take:
         fastq_ch
 
     main:
-    ref_manifest_ch = Channel.fromPath(params.reference_manifest)
-    ref_path_ch = ref_manifest_ch.splitCsv(header: true, sep: ',')
-        .map{ row -> tuple(row.reference_id, file(row.reference_path)) }
+        ref_manifest_ch = Channel.fromPath(params.reference_manifest)
+        ref_path_ch = ref_manifest_ch.splitCsv(header: true, sep: ',')
+            .map{ row -> tuple(row.reference_id, file(row.reference_path)) }
 
-    NANOPLOT_QC(fastq_ch.flatMap())
+        NANOPLOT_QC(fastq_ch)
 
-    GET_CHROM_SIZES_AND_INDEX(ref_path_ch)
+        GET_CHROM_SIZES_AND_INDEX(ref_path_ch)
 
-    MINIMAP2_INDEX(
-        GET_CHROM_SIZES_AND_INDEX.out.ref_ch,
-        GET_CHROM_SIZES_AND_INDEX.out.sizes_ch
-    )
+        MINIMAP2_INDEX(
+            GET_CHROM_SIZES_AND_INDEX.out.ref_ch
+        )
 
-    MINIMAP2_ALIGN(
-        MINIMAP2_INDEX.out.mm2_index_ch,
-        MINIMAP2_INDEX.out.ref_ch,
-        fastq_ch.collect(),
-        MINIMAP2_INDEX.out.sizes_ch
-    )
+        MINIMAP2_ALIGN(
+            MINIMAP2_INDEX.out.ref_ch,
+            MINIMAP2_INDEX.out.mm2_index_ch,
+            fastq_ch
+        )
 
-    SAMTOOLS_VIEW_SAM_TO_BAM(MINIMAP2_ALIGN.out.sam_file.flatMap())
+        SAMTOOLS_VIEW_SAM_TO_BAM(
+            MINIMAP2_ALIGN.out.ref_ch,
+            MINIMAP2_ALIGN.out.sam_file
+        )
 
-    SAMTOOLS_SORT_AND_INDEX(SAMTOOLS_VIEW_SAM_TO_BAM.out.bam_file)
+        SAMTOOLS_SORT_AND_INDEX(
+            SAMTOOLS_VIEW_SAM_TO_BAM.out.ref_ch,
+            SAMTOOLS_VIEW_SAM_TO_BAM.out.bam_file,
+        )
 
-    BEDTOOLS_GENOMECOV(
-        SAMTOOLS_SORT_AND_INDEX.out.sorted_bam,
-        SAMTOOLS_SORT_AND_INDEX.out.sorted_bam_index
-    )
+        BEDTOOLS_GENOMECOV(
+            SAMTOOLS_SORT_AND_INDEX.out.sorted_bam,
+            SAMTOOLS_SORT_AND_INDEX.out.sorted_bam_index
+        )
 
-    if (params.variant_caller == "medaka_haploid"){
-        MEDAKA_HAPLOID_VARIANT_CALLING(fastq_ch.flatMap().combine(ref_path_ch))
-        BGZIP_AND_INDEX_VCF(MEDAKA_HAPLOID_VARIANT_CALLING.out.vcf_ch)
-    }
+        if (params.variant_caller == "medaka_haploid") {
+            MEDAKA_HAPLOID_VARIANT_CALLING(ref_path_ch, fastq_ch)
+            BGZIP_AND_INDEX_VCF(MEDAKA_HAPLOID_VARIANT_CALLING.out.vcf_ch)
+        }
 
-    if (params.variant_caller == "medaka") {
-        MEDAKA_VARIANT_CALLING(SAMTOOLS_SORT_AND_INDEX.out.sorted_bam,
-                               MINIMAP2_INDEX.out.ref_ch.collect())
-        BGZIP_AND_INDEX_VCF(MEDAKA_VARIANT_CALLING.out.vcf_ch)
-    }
+        if (params.variant_caller == "medaka") {
+            MEDAKA_VARIANT_CALLING(SAMTOOLS_SORT_AND_INDEX.out.ref_ch,
+                                SAMTOOLS_SORT_AND_INDEX.out.sorted_bam)
+            BGZIP_AND_INDEX_VCF(MEDAKA_VARIANT_CALLING.out.vcf_ch)
+        }
 
-    if (params.variant_caller == "freebayes") {
-        FREEBAYES_VARIANT_CALLING(SAMTOOLS_SORT_AND_INDEX.out.sorted_bam,
-                                  MINIMAP2_INDEX.out.ref_ch.collect())
-        BGZIP_AND_INDEX_VCF(FREEBAYES_VARIANT_CALLING.out.vcf_ch)
-    }
+        if (params.variant_caller == "freebayes") {
+            FREEBAYES_VARIANT_CALLING(SAMTOOLS_SORT_AND_INDEX.out.ref_ch,
+                                    SAMTOOLS_SORT_AND_INDEX.out.sorted_bam)
+            BGZIP_AND_INDEX_VCF(FREEBAYES_VARIANT_CALLING.out.vcf_ch)
+        }
 }
 
 workflow {
@@ -398,5 +399,5 @@ workflow {
 
     PYCOQC(sequence_ch)
 
-    NANOSEQ(SORT_FASTQS.out.full_fastq_files)
+    NANOSEQ(SORT_FASTQS.out.full_fastq_files.flatten())
 }

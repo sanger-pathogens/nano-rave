@@ -1,0 +1,77 @@
+def testData = new File("test_data")
+def inputs = new File(testData, "inputs")
+def outputs = new File(testData, "outputs")
+
+def verifyOutputs = { outputDir, variantCaller ->
+    def expectedDir = new File(outputs, variantCaller)
+    def actualDir = new File(outputDir)
+
+    println "\nPipeline run complete\nComparing `${expectedDir}` and `${actualDir}`..."
+
+    assert Compare.dirsConform(expectedDir, actualDir, NanoraveCompare.&compare) :
+        "The pipeline output didn't match the expected output (generated in a previous pipeline run). See stderr for a more verbose report"
+}
+
+nextflow_pipeline {
+
+    name "Test Workflow main.nf"
+    script "main.nf"
+
+    test("Should execute the pipeline with medaka") {
+
+        when {
+            params {
+                sequencing_manifest = "${new File(inputs, "test_manifest.csv")}"
+                reference_manifest  = "${new File(inputs, "reference_manifest.csv")}"
+                results_dir         = "${outputDir}"
+                variant_caller      = "medaka"
+                min_barcode_size    = 0
+            }
+        }
+
+        then {
+            assert workflow.success
+            verifyOutputs(outputDir, "medaka")
+        }
+
+    }
+
+    test("Should execute the pipeline with medaka_haploid") {
+
+        when {
+            params {
+                sequencing_manifest = "${new File(inputs, "test_manifest.csv")}"
+                reference_manifest  = "${new File(inputs, "reference_manifest.csv")}"
+                results_dir         = "${outputDir}"
+                variant_caller      = "medaka_haploid"
+                min_barcode_size    = 0
+            }
+        }
+
+        then {
+            assert workflow.success
+            verifyOutputs(outputDir, "medaka_haploid")
+        }
+
+    }
+
+    test("Should execute the pipeline with freebayes") {
+        
+        when {
+            params {
+                sequencing_manifest = "${new File(inputs, "test_manifest.csv")}"
+                reference_manifest  = "${new File(inputs, "reference_manifest.csv")}"
+                results_dir         = "${outputDir}"
+                variant_caller      = "freebayes"
+                min_barcode_size    = 0
+            }
+        }
+
+        then {
+            assert workflow.success
+            verifyOutputs(outputDir, "freebayes")
+        }
+
+    }
+
+}
