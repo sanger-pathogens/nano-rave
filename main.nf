@@ -371,14 +371,18 @@ workflow NANOSEQ {
         }
 
         if (params.variant_caller == "medaka") {
-            MEDAKA_VARIANT_CALLING(SAMTOOLS_SORT_AND_INDEX.out.ref_ch,
-                                SAMTOOLS_SORT_AND_INDEX.out.sorted_bam)
+            MEDAKA_VARIANT_CALLING(
+                SAMTOOLS_SORT_AND_INDEX.out.ref_ch,
+                SAMTOOLS_SORT_AND_INDEX.out.sorted_bam
+            )
             BGZIP_AND_INDEX_VCF(MEDAKA_VARIANT_CALLING.out.vcf_ch)
         }
 
         if (params.variant_caller == "freebayes") {
-            FREEBAYES_VARIANT_CALLING(SAMTOOLS_SORT_AND_INDEX.out.ref_ch,
-                                    SAMTOOLS_SORT_AND_INDEX.out.sorted_bam)
+            FREEBAYES_VARIANT_CALLING(
+                SAMTOOLS_SORT_AND_INDEX.out.ref_ch,
+                SAMTOOLS_SORT_AND_INDEX.out.sorted_bam
+            )
             BGZIP_AND_INDEX_VCF(FREEBAYES_VARIANT_CALLING.out.vcf_ch)
         }
 }

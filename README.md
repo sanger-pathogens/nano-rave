@@ -154,13 +154,19 @@ Developer contributions to this pipeline will only be accepted if all pipeline t
 
 1. Make your changes.
 
-2. Install [`nf-test`](https://code.askimed.com/nf-test/installation/) (>=0.7.0) and run the tests:
+2. Download the test data. A utility script is provided:
+
+   ```
+   python3 scripts/download_test_data.py
+   ```
+
+3. Install [`nf-test`](https://code.askimed.com/nf-test/installation/) (>=0.7.0) and run the tests:
 
    ```
    nf-test test tests/*.nf.test
    ```
 
-3. Submit a PR.
+4. Submit a PR.
 
 ## Citations
 If you use this pipeline for your analysis, please cite:

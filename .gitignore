@@ -7,3 +7,4 @@ work
 .nf-test
 *.o
 *.e
+test_data
