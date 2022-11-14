@@ -282,11 +282,11 @@ process MEDAKA_HAPLOID_VARIANT_CALLING {
 
         medaka_haploid_variant -r ${reference} -i ${fastq}
 
-        mv medaka/medaka.annotated.vcf \${filename}_${ref_id}.vcf
+        mv medaka/medaka.annotated.vcf \${filename}.vcf
 
         # sort vcf by index to stop tabix crying
-        cat \${filename}_${ref_id}.vcf | awk '\$1 ~ /^#/ {print \$0;next} {print \$0 | "sort -k1,1 -k2,2n"}' > \${filename}_sorted.vcf
-        mv \${filename}_sorted.vcf \${filename}_${ref_id}.vcf
+        cat \${filename}.vcf | awk '\$1 ~ /^#/ {print \$0;next} {print \$0 | "sort -k1,1 -k2,2n"}' > \${filename}_sorted.vcf
+        mv \${filename}_sorted.vcf \${filename}.vcf
         """
 }
 
