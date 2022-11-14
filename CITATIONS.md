@@ -1,4 +1,4 @@
-# Nanopore variant calling pipeline: Citations
+# Nano-Rave: Citations
 
 ## [PLACEHOLDER FOR WILL HAMILTON'S CITATION]
 
