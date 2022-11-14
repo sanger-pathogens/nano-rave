@@ -1,4 +1,4 @@
-class NanoraveCompare {
+class NanoRaveCompare {
     /**
      * A comparison function that takes into account the file extension. It:
      * - Ignores .log files.
