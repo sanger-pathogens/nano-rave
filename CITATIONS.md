@@ -1,4 +1,4 @@
-# Nano-Rave: Citations
+# nano-rave: Citations
 
 ## [PLACEHOLDER FOR WILL HAMILTON'S CITATION]
 
@@ -37,4 +37,3 @@
 - [SAMtools](https://www.ncbi.nlm.nih.gov/pubmed/19505943/)
 
   > Li H, Handsaker B, Wysoker A, Fennell T, Ruan J, Homer N, Marth G, Abecasis G, Durbin R; 1000 Genome Project Data Processing Subgroup. The Sequence Alignment/Map format and SAMtools. Bioinformatics. 2009 Aug 15;25(16):2078-9. doi: 10.1093/bioinformatics/btp352. Epub 2009 Jun 8. PubMed PMID: 19505943; PubMed Central PMCID: PMC2723002.
-

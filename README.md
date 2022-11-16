@@ -1,4 +1,4 @@
-# Nano-Rave
+# nano-rave
 Nextflow pipeline designed for rapid onsite QC and variant calling of Oxford Nanopore data (following basecalling and demultiplexing with [Guppy](https://nanoporetech.com/how-it-works/basecalling#_neural-networks)).
 
 ## Pipeline summary
