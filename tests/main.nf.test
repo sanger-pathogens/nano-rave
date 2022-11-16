@@ -8,7 +8,7 @@ def verifyOutputs = { outputDir, variantCaller ->
 
     println "\nPipeline run complete\nComparing `${expectedDir}` and `${actualDir}`..."
 
-    assert Compare.dirsConform(expectedDir, actualDir, NanoRaveCompare.&compare) :
+    assert Compare.dirsConform(expectedDir, actualDir, NanoraveCompare.&compare) :
         "The pipeline output didn't match the expected output (generated in a previous pipeline run). See stderr for a more verbose report"
 }
 
