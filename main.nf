@@ -388,7 +388,10 @@ workflow NANOSEQ {
         )
 
         if (params.variant_caller == "medaka_haploid") {
-            MEDAKA_HAPLOID_VARIANT_CALLING(ref_path_ch, fastq_ch)
+            MEDAKA_HAPLOID_VARIANT_CALLING(
+                NORMALISE_FASTAS.out.normalised_ref_ch,
+                fastq_ch
+            )
             BGZIP_AND_INDEX_VCF(MEDAKA_HAPLOID_VARIANT_CALLING.out.vcf_ch)
         }
 
