@@ -13,10 +13,10 @@ OUTPUT_DIR = Path("./test_data")
 
 
 def _error_if_not_ok(response):
-    exit_code = response.getcode()
+    status_code = response.getcode()
     # Note: 200 means OK
-    if exit_code != 200: 
-        raise RuntimeError(f"Server responded with exit code {exit_code}")
+    if status_code != 200: 
+        raise RuntimeError(f"Server responded with status code {status_code}")
 
 
 def fetch_index(continuation_token = None) -> Tuple[List[str], Optional[Any]]:

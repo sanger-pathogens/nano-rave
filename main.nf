@@ -156,6 +156,24 @@ process PYCOQC {
         """
 }
 
+process NORMALISE_FASTAS {
+    container "quay.io/biocontainers/biopython:1.78"
+    input:
+        tuple val(ref_id), path(reference)
+    output:
+        tuple val(ref_id), path(reference), emit: normalised_ref_ch
+    script:
+        """
+        #!/usr/bin/env python3
+        from Bio import SeqIO
+        import shutil
+
+        records = SeqIO.parse("${reference}", "fasta")
+        SeqIO.write(records, "${reference}.normalised", "fasta")
+        shutil.move("${reference}.normalised", "${reference}")
+        """
+}
+
 process GET_CHROM_SIZES_AND_INDEX {
     container "quay.io/biocontainers/samtools:1.15.1--h1170115_0"
     input:
@@ -338,7 +356,11 @@ workflow NANOSEQ {
 
         NANOPLOT_QC(fastq_ch)
 
-        GET_CHROM_SIZES_AND_INDEX(ref_path_ch)
+        NORMALISE_FASTAS(ref_path_ch)
+
+        GET_CHROM_SIZES_AND_INDEX(
+            NORMALISE_FASTAS.out.normalised_ref_ch
+        )
 
         MINIMAP2_INDEX(
             GET_CHROM_SIZES_AND_INDEX.out.ref_ch
@@ -366,7 +388,10 @@ workflow NANOSEQ {
         )
 
         if (params.variant_caller == "medaka_haploid") {
-            MEDAKA_HAPLOID_VARIANT_CALLING(ref_path_ch, fastq_ch)
+            MEDAKA_HAPLOID_VARIANT_CALLING(
+                NORMALISE_FASTAS.out.normalised_ref_ch,
+                fastq_ch
+            )
             BGZIP_AND_INDEX_VCF(MEDAKA_HAPLOID_VARIANT_CALLING.out.vcf_ch)
         }
 
