@@ -25,7 +25,7 @@ nextflow_pipeline {
                 reference_manifest  = "${new File(inputs, "reference_manifest.csv")}"
                 results_dir         = "${outputDir}"
                 variant_caller      = "medaka"
-                min_barcode_size    = 0
+                min_barcode_size    = 5
             }
         }
 
@@ -44,7 +44,7 @@ nextflow_pipeline {
                 reference_manifest  = "${new File(inputs, "reference_manifest.csv")}"
                 results_dir         = "${outputDir}"
                 variant_caller      = "medaka_haploid"
-                min_barcode_size    = 0
+                min_barcode_size    = 5
             }
         }
 
@@ -63,7 +63,7 @@ nextflow_pipeline {
                 reference_manifest  = "${new File(inputs, "reference_manifest.csv")}"
                 results_dir         = "${outputDir}"
                 variant_caller      = "freebayes"
-                min_barcode_size    = 0
+                min_barcode_size    = 5
             }
         }
 

@@ -12,7 +12,7 @@ def printHelp() {
         --reference_manifest         Manifest containing reference identifiers and paths to fastq reference files (mandatory)
         --results_dir                Specify results directory [default: ./nextflow_results] (optional)
         --variant_caller             Specify a variant caller to use [medaka (default), medaka_haploid, freebayes] (optional)
-        --min_barcode_dir_size           Specify the expected minimum size of the barcode directories, in MB [default: 10] (optional)
+        --min_barcode_dir_size       Specify the expected minimum size of the barcode directories, in MB. Must be > 0. [default: 10] (optional)
         --help                       Print this help message (optional)
     """.stripIndent()
 }
@@ -77,6 +77,18 @@ def validate_number_param(param_option, param) {
     return 0
 }
 
+def validate_min_barcode_dir_size(param_option, param) {
+    if (validate_number_param(param_option, param) == 1) {
+        return 1
+    }
+    param_name = (param_option - "--").replaceAll("_", " ")
+    if (!(param > 0)) {
+        log.error("The ${param_name} specified with the ${param_option} option must have a positive value")
+        return 1
+    }
+    return 0
+}
+
 def validate_results_dir(results_dir) {
     results_dir = file(results_dir)
     if (results_dir.exists() && !results_dir.isDirectory()) {
@@ -92,7 +104,7 @@ def validate_parameters() {
     errors += validate_path_param("--reference_manifest", params.reference_manifest)
     errors += validate_path_param("--sequencing_manifest", params.sequencing_manifest)
     errors += validate_choice_param("--variant_caller", params.variant_caller, ["medaka", "medaka_haploid", "freebayes"])
-    errors += validate_number_param("--min_barcode_dir_size", params.min_barcode_dir_size)
+    errors += validate_min_barcode_dir_size("--min_barcode_dir_size", params.min_barcode_dir_size)
     errors += validate_results_dir(params.results_dir)
 
     if (errors > 0) {

@@ -1,6 +1,8 @@
 # nano-rave: Citations
 
-## [PLACEHOLDER FOR WILL HAMILTON'S CITATION]
+## [nano-rave](https://github.com/sanger-pathogens/nano-rave)
+
+> Sophia T. Girgis, Edem Adika, Felix E. Nenyewodey, Dodzi K. Senoo Jnr, Joyce M. Ngoi, Kukua Bandoh, Oliver Lorenz, Guus van de Steeg, Sebastian Nsoh, Kim Judge, Richard D. Pearson, Jacob Almagro-Garcia, Samirah Saiid, Solomon Atampah, Enock K. Amoako, Collins M. Morang’a, Victor Asoala, Elrmion S. Adjei, William Burden, William Roberts-Sengier, Eleanor Drury, Sónia Gonçalves, Gordon A. Awandare, Dominic P. Kwiatkowski, Lucas N. Amenga-Etego, William L. Hamilton. Nanopore sequencing for real-time genomic surveillance of Plasmodium falciparum. [bioRxiv 521122](https://www.biorxiv.org/content/10.1101/2022.12.20.521122v1); doi: [10.1101/521122](https://doi.org/10.1101/2022.12.20.521122)
 
 ## [nf-core/nanoseq](https://github.com/nf-core/nanoseq/)
 

@@ -14,7 +14,7 @@ Nextflow pipeline designed for rapid onsite QC and variant calling of Oxford Nan
 
    Example:
    ```bash
-   nextflow run github.com/nano-rave --sequencing_manifest ./test_data/pipeline/inputs/test_manifest.csv --reference_manifest ./test_data/pipeline/inputs/reference_manifest.csv --variant_caller medaka_haploid --min_barcode_dir_size 5 --results_dir my_output
+   nextflow run github.com/sanger-pathogens/nano-rave --sequencing_manifest ./test_data/pipeline/inputs/test_manifest.csv --reference_manifest ./test_data/pipeline/inputs/reference_manifest.csv --variant_caller medaka_haploid --min_barcode_dir_size 5 --results_dir my_output
    ```
 
    See [usage](#usage) for all available pipeline options.
@@ -73,7 +73,7 @@ Options:
     --reference_manifest         Manifest containing reference identifiers and paths to fastq reference files (mandatory)
     --results_dir                Specify results directory [default: ./nextflow_results] (optional)
     --variant_caller             Specify a variant caller to use [medaka (default), medaka_haploid, freebayes] (optional)
-    --min_barcode_dir_size           Specify the expected minimum size of the barcode directories, in MB [default: 10] (optional)
+    --min_barcode_dir_size       Specify the expected minimum size of the barcode directories, in MB. Must be > 0. [default: 10] (optional)
     --help                       Print this help message (optional)
 ```
 
@@ -171,7 +171,11 @@ Developer contributions to this pipeline will only be accepted if all pipeline t
 ## Citations
 If you use this pipeline for your analysis, please cite:
 
-> [PLACEHOLDER FOR WILL HAMILTON'S CITATION]
+> Nanopore sequencing for real-time genomic surveillance of Plasmodium falciparum
+>
+> Sophia T. Girgis, Edem Adika, Felix E. Nenyewodey, Dodzi K. Senoo Jnr, Joyce M. Ngoi, Kukua Bandoh, Oliver Lorenz, Guus van de Steeg, Sebastian Nsoh, Kim Judge, Richard D. Pearson, Jacob Almagro-Garcia, Samirah Saiid, Solomon Atampah, Enock K. Amoako, Collins M. Morang’a, Victor Asoala, Elrmion S. Adjei, William Burden, William Roberts-Sengier, Eleanor Drury, Sónia Gonçalves, Gordon A. Awandare, Dominic P. Kwiatkowski, Lucas N. Amenga-Etego, William L. Hamilton
+>
+> [bioRxiv 521122](https://www.biorxiv.org/content/10.1101/2022.12.20.521122v1); doi: [10.1101/521122](https://doi.org/10.1101/2022.12.20.521122)
 
 This pipeline was adapted from the [nf-core/nanoseq](https://github.com/nf-core/nanoseq) pipeline.
 
@@ -179,6 +183,6 @@ This pipeline was adapted from the [nf-core/nanoseq](https://github.com/nf-core/
 >
 > Ying Chen, Nadia M. Davidson, Yuk Kei Wan, Harshil Patel, Fei Yao, Hwee Meng Low, Christopher Hendra, Laura Watten, Andre Sim, Chelsea Sawyer, Viktoriia Iakovleva, Puay Leng Lee, Lixia Xin, Hui En Vanessa Ng, Jia Min Loo, Xuewen Ong, Hui Qi Amanda Ng, Jiaxu Wang, Wei Qian Casslynn Koh, Suk Yeah Polly Poon, Dominik Stanojevic, Hoang-Dai Tran, Kok Hao Edwin Lim, Shen Yon Toh, Philip Andrew Ewels, Huck-Hui Ng, N.Gopalakrishna Iyer, Alexandre Thiery, Wee Joo Chng, Leilei Chen, Ramanuj DasGupta, Mile Sikic, Yun-Shen Chan, Boon Ooi Patrick Tan, Yue Wan, Wai Leong Tam, Qiang Yu, Chiea Chuan Khor, Torsten Wüstefeld, Ploy N. Pratanwanich, Michael I. Love, Wee Siong Sho Goh, Sarah B. Ng, Alicia Oshlack, Jonathan Göke, SG-NEx consortium
 >
->[bioRxiv 610741](https://www.biorxiv.org/content/10.1101/2021.04.21.440736v1); doi: [10.1101/610741](https://doi.org/10.1101/2021.04.21.440736)
+> [bioRxiv 610741](https://www.biorxiv.org/content/10.1101/2021.04.21.440736v1); doi: [10.1101/610741](https://doi.org/10.1101/2021.04.21.440736)
 
 A full list of citations for tools used in the pipeline is given in [CITATIONS.md](./CITATIONS.md)
