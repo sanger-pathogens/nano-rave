@@ -166,6 +166,8 @@ Developer contributions to this pipeline will only be accepted if all pipeline t
    nf-test test tests/*.nf.test
    ```
 
+   If running on Sanger HPC cluster, add the option `--profile sanger_lsf`.
+
 4. Submit a PR.
 
 ## Citations
