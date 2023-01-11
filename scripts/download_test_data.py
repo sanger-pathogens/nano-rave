@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import xml.etree.ElementTree as ET
+import urllib.parse as urlparse
 import urllib.request as urlrequest
 from pathlib import Path
 import shutil
@@ -57,7 +58,7 @@ def fetch_index(continuation_token = None) -> Tuple[List[str], Optional[Any]]:
 
 
 def download_file(path: str):
-    url = BUCKET_URL + "/" + path
+    url = BUCKET_URL + "/" + urlparse.quote_plus(path)
 
     # Note: '/' operator joins paths
     dest = OUTPUT_DIR / path
