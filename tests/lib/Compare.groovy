@@ -78,7 +78,6 @@ public class Compare {
         INCORRECT // The actual file's contents don't match the expected file.
     }
 
-
     /**
      * Returns the uncompressed contents of a gzipped file, as a string.
      */
@@ -104,9 +103,9 @@ public class Compare {
      */
     private static def relativePathsIn(dir) {
         def set = new HashSet<String>()
-        def dirUri = dir.toURI()
+        def dirPath = dir.toPath()
         dir.eachFileRecurse (FileType.FILES) { file ->
-            def path = dirUri.relativize(file.toURI())
+            def path = dirPath.relativize(file.toPath())
             set.add("$path")
         }
         return set
