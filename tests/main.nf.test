@@ -1,3 +1,5 @@
+// Copyright (C) 2022,2023 Genome Research Ltd.
+
 def testData = new File("test_data")
 def inputs = new File(testData, "inputs")
 def outputs = new File(testData, "outputs")

@@ -1,3 +1,5 @@
+// Copyright (C) 2022,2023 Genome Research Ltd.
+
 import groovy.io.FileType
 import java.nio.file.Files
 import java.nio.file.Paths

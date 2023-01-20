@@ -188,3 +188,6 @@ This pipeline was adapted from the [nf-core/nanoseq](https://github.com/nf-core/
 > [bioRxiv 610741](https://www.biorxiv.org/content/10.1101/2021.04.21.440736v1); doi: [10.1101/610741](https://doi.org/10.1101/2021.04.21.440736)
 
 A full list of citations for tools used in the pipeline is given in [CITATIONS.md](./CITATIONS.md)
+
+## Copyright
+Copyright (C) 2022,2023 Genome Research Ltd.

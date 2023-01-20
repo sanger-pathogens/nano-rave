@@ -1,4 +1,5 @@
 #!/usr/bin/env nextflow
+// Copyright (C) 2022,2023 Genome Research Ltd.
 
 nextflow.enable.dsl = 2
 

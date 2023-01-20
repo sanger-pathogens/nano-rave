@@ -1,3 +1,4 @@
+# Copyright (C) 2022,2023 Genome Research Ltd.
 ### Load images
 FROM quay.io/biocontainers/minimap2:2.17--hed695b0_3 AS minimap2
 FROM quay.io/biocontainers/sniffles:1.0.12--h8b12597_1 AS sniffles

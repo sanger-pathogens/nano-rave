@@ -1,3 +1,5 @@
+// Copyright (C) 2022,2023 Genome Research Ltd.
+
 class NanoraveCompare {
     /**
      * A comparison function that takes into account the file extension. It:
