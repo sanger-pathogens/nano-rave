@@ -1,3 +1,5 @@
+// Copyright (C) 2022,2023 Genome Research Ltd.
+
 public class Vcf {
     /**
      * Given two streams of lines in VCF format, returns true if they are close enough to be considered

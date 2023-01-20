@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Copyright (C) 2022,2023 Genome Research Ltd.
 
 import xml.etree.ElementTree as ET
 import urllib.parse as urlparse
