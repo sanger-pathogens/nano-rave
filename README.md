@@ -49,11 +49,11 @@ Nextflow pipeline designed for rapid onsite QC and variant calling of Oxford Nan
    ```
 
 5. Start your analysis  
-   Note: To use the appropriate Sanger configuration, please run with `-profile sanger_lsf` option.
+   Note: To use the appropriate Sanger configuration, please run with `-profile sanger_local` option.
 
    Example:
    ```bash
-   nano-rave -profile sanger_lsf --sequencing_manifest ./test_data/pipeline/inputs/test_manifest.csv --reference_manifest ./test_data/pipeline/inputs/reference_manifest.csv --variant_caller medaka_haploid --min_barcode_dir_size 5 --results_dir my_output
+   nano-rave -profile sanger_local --sequencing_manifest ./test_data/pipeline/inputs/test_manifest.csv --reference_manifest ./test_data/pipeline/inputs/reference_manifest.csv --variant_caller medaka_haploid --min_barcode_dir_size 5 --results_dir my_output
    ```
 
    See [usage](#usage) for all available pipeline options.
@@ -166,7 +166,7 @@ Developer contributions to this pipeline will only be accepted if all pipeline t
    nf-test test tests/*.nf.test
    ```
 
-   If running on Sanger HPC cluster, add the option `--profile sanger_lsf`.
+   If running on Sanger HPC cluster, add the option `--profile sanger_local`.
 
 4. Submit a PR.
 
