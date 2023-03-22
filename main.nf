@@ -104,7 +104,7 @@ def validate_parameters() {
 
     errors += validate_path_param("--reference_manifest", params.reference_manifest)
     errors += validate_path_param("--sequencing_manifest", params.sequencing_manifest)
-    errors += validate_choice_param("--variant_caller", params.variant_caller, ["medaka", "medaka_haploid", "freebayes"])
+    errors += validate_choice_param("--variant_caller", params.variant_caller, ["medaka", "medaka_haploid", "freebayes", "clair3"])
     errors += validate_min_barcode_dir_size("--min_barcode_dir_size", params.min_barcode_dir_size)
     errors += validate_results_dir(params.results_dir)
 
@@ -340,6 +340,36 @@ process FREEBAYES_VARIANT_CALLING {
         """
 }
 
+process CLAIR3_VARIANT_CALLING {
+    //container "quay.io/biocontainers/clair3:1.0.0--py39hb9dc472_1"  // Doesn't include models
+    container "hkubal/clair3:v1.0.0"  // Includes models
+    input:
+        tuple val(ref_id), path(reference)
+        path(sorted_bam_file)
+    output:
+        path("*.vcf"), emit: vcf_ch
+    script:
+        model="r941_prom_sup_g5014"
+        """
+        filename=\$(basename ${sorted_bam_file} | awk -F "." '{ print \$1}')
+        
+        run_clair3.sh \
+            --bam_fn=${sorted_bam_file} \
+            --ref_fn=${reference} \
+            --threads=${task.cpus} \
+            --platform="ont" \
+            --model_path="/opt/models/${model}" \
+            --no_phasing_for_fa \
+            --include_all_ctgs \
+            --haploid_precise \
+            --output=.
+
+        # sort vcf by index to stop tabix crying
+        cat \${filename}.vcf | awk '\$1 ~ /^#/ {print \$0;next} {print \$0 | "sort -k1,1 -k2,2n"}' > \${filename}_sorted.vcf
+        mv \${filename}_sorted.vcf \${filename}.vcf
+        """
+}
+
 process BGZIP_AND_INDEX_VCF {
     container "quay.io/biocontainers/tabix:1.11--hdfd78af_0"
     publishDir "${params.results_dir}/variant_calling", mode: 'copy', overwrite: true
@@ -422,6 +452,14 @@ workflow NANOSEQ {
                 SAMTOOLS_SORT_AND_INDEX.out.sorted_bam
             )
             BGZIP_AND_INDEX_VCF(FREEBAYES_VARIANT_CALLING.out.vcf_ch)
+        }
+
+        if (params.variant_caller == "clair3") {
+            CLAIR3_VARIANT_CALLING(
+                SAMTOOLS_SORT_AND_INDEX.out.ref_ch,
+                SAMTOOLS_SORT_AND_INDEX.out.sorted_bam
+            )
+            BGZIP_AND_INDEX_VCF(CLAIR3_VARIANT_CALLING.out.vcf_ch)
         }
 }
 
