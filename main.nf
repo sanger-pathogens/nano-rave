@@ -114,6 +114,38 @@ def validate_parameters() {
     }
 }
 
+def build_tool_options(tool_box, tool_tray) {
+    // reads command line and config supplied editable settings for tools, to collate run specific settings
+    if( tool_tray instanceof String ) {
+        if( tool_tray ==~ '[&|;]' ) {
+            println("WARNING: DANGEROUS INPUT! Please do not use command funnels in editable options!")
+            System.exit(0)
+        }
+        if( !tool_tray.endsWith(']') || !tool_tray.startsWith('[') ) { // check for list input format
+            println("""Please input command line option lists in format tool="['-option' : 'value', '--option_state' : ' ']"""")
+            System.exit(0)
+        }
+        tool_intermediate = Eval.me(tool_tray);
+        tool_tray = tool_intermediate
+    }
+
+    def tool_belt = []
+
+    for( tool : tool_box.keySet() ) {
+        if(tool_tray.containsKey(tool)) {
+            cmd_tool = tool + ' ' + tool_tray.get(tool);
+            tool_belt.add(cmd_tool);
+            tool_tray.remove(tool)
+        }
+        else if( tool_box.get(tool) != 'unused' ) {
+            tool = tool + ' ' + tool_box.get(tool);
+            tool_belt.add(tool)
+        }
+    }
+    equipped_tools = tool_belt.join(' ')
+    return equipped_tools
+}
+
 process SORT_FASTQS {
     /* Checks each barcode directory contains sufficient reads and concatenates fastq.gz files for further processing */
     input:
