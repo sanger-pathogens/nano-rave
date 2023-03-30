@@ -382,6 +382,7 @@ process CLAIR3_VARIANT_CALLING {
         path("*.vcf"), emit: vcf_ch
     script:
         model="r941_prom_sup_g5014"
+        options=build_tool_options(params.base_clair, clair3)
         """
         filename=\$(basename ${sorted_bam_file} | awk -F "." '{ print \$1}')
         
@@ -395,6 +396,7 @@ process CLAIR3_VARIANT_CALLING {
             --include_all_ctgs \
             --haploid_precise \
             --output=.
+            ${options}
 
         # sort vcf by index to stop tabix crying
         cat \${filename}.vcf | awk '\$1 ~ /^#/ {print \$0;next} {print \$0 | "sort -k1,1 -k2,2n"}' > \${filename}_sorted.vcf
