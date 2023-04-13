@@ -12,7 +12,7 @@ def printHelp() {
         --sequencing_manifest        Manifest containing paths to sequencing directories and sequencing summary files (mandatory)
         --reference_manifest         Manifest containing reference identifiers and paths to fastq reference files (mandatory)
         --results_dir                Specify results directory [default: ./nextflow_results] (optional)
-        --variant_caller             Specify a variant caller to use [medaka (default), medaka_haploid, freebayes] (optional)
+        --variant_caller             Specify a variant caller to use [medaka (default), medaka_haploid, freebayes, clair3] (optional)
         --min_barcode_dir_size       Specify the expected minimum size of the barcode directories, in MB. Must be > 0. [default: 10] (optional)
         --help                       Print this help message (optional)
     """.stripIndent()
@@ -104,7 +104,7 @@ def validate_parameters() {
 
     errors += validate_path_param("--reference_manifest", params.reference_manifest)
     errors += validate_path_param("--sequencing_manifest", params.sequencing_manifest)
-    errors += validate_choice_param("--variant_caller", params.variant_caller, ["medaka", "medaka_haploid", "freebayes"])
+    errors += validate_choice_param("--variant_caller", params.variant_caller, ["medaka", "medaka_haploid", "freebayes", "clair3"])
     errors += validate_min_barcode_dir_size("--min_barcode_dir_size", params.min_barcode_dir_size)
     errors += validate_results_dir(params.results_dir)
 
@@ -192,7 +192,7 @@ process GET_CHROM_SIZES_AND_INDEX {
     input:
         tuple val(ref_id), path(reference)
     output:
-        path("*.fai"), emit: fasta_index_ch
+        tuple val(ref_id), path("*.fai"), emit: fasta_index_ch
         tuple val(ref_id), path(reference), emit: ref_ch
     script:
         """
@@ -251,8 +251,7 @@ process SAMTOOLS_SORT_AND_INDEX {
         tuple val(ref_id), path(reference)
         path(bam_file)
     output:
-        path("*.sorted.bam"), emit: sorted_bam
-        path("*.sorted.bam.bai"), emit: sorted_bam_index
+        tuple path("*.sorted.bam"), path("*.sorted.bam.bai"),  emit: sorted_bam
         tuple val(ref_id), path(reference), emit: ref_ch
     script:
         """
@@ -266,8 +265,7 @@ process BEDTOOLS_GENOMECOV {
     container "quay.io/biocontainers/bedtools:2.29.2--hc088bd4_0"
     publishDir "${params.results_dir}/genome_coverage", mode: 'copy', overwrite: true, pattern: "*.bedGraph"
     input:
-        path(sorted_bam_file)
-        path(sorted_bam_index)
+        tuple path(sorted_bam_file), path(sorted_bam_index)
 
     output:
         path("*.bedGraph"), emit: genome_cov_ch
@@ -283,7 +281,7 @@ process MEDAKA_VARIANT_CALLING {
     container "quay.io/biocontainers/medaka:1.4.4--py38h130def0_0"
     input:
         tuple val(ref_id), path(reference)
-        path(sorted_bam_file)
+        tuple path(sorted_bam_file), path(sorted_bam_index)
     output:
         path("*.vcf"), emit: vcf_ch
     script:
@@ -325,7 +323,7 @@ process FREEBAYES_VARIANT_CALLING {
     container "docker.io/gfanz/freebayes@sha256:d32bbce0216754bfc7e01ad6af18e74df3950fb900de69253107dc7bcf4e1351"
     input:
         tuple val(ref_id), path(reference)
-        path(sorted_bam_file)
+        tuple path(sorted_bam_file), path(sorted_bam_index)
     output:
         path("*.vcf"), emit: vcf_ch
     script:
@@ -337,6 +335,37 @@ process FREEBAYES_VARIANT_CALLING {
         # sort vcf by index to stop tabix crying
         cat \${filename}.vcf | awk '\$1 ~ /^#/ {print \$0;next} {print \$0 | "sort -k1,1 -k2,2n"}' > \${filename}_sorted.vcf
         mv \${filename}_sorted.vcf \${filename}.vcf
+        """
+}
+
+process CLAIR3_VARIANT_CALLING {
+    container "docker.io/hkubal/clair3@sha256:3c4c6db3bb6118e3156630ee62de8f6afef7f7acc9215199f9b6c1b2e1926cf8"  // Includes models
+    input:
+        tuple val(ref_id), path(reference), path(reference_index)
+        tuple path(sorted_bam_file), path(sorted_bam_index)
+    output:
+        path("*.vcf"), emit: vcf_ch
+    script:
+        model="r941_prom_sup_g5014"
+        """
+        filename=\$(basename ${sorted_bam_file} | awk -F "." '{ print \$1}')
+        
+        run_clair3.sh \
+            --bam_fn=${sorted_bam_file} \
+            --ref_fn=${reference} \
+            --threads=${task.cpus} \
+            --platform="ont" \
+            --model_path="/opt/models/${model}" \
+            --no_phasing_for_fa \
+            --include_all_ctgs \
+            --haploid_precise \
+            --output=.
+
+        if [[ ! -s "merge_output.vcf.gz" ]]; then
+            cp pileup.vcf.gz merge_output.vcf.gz
+        fi
+        # sort vcf by index to stop tabix crying
+        zcat merge_output.vcf.gz | awk '\$1 ~ /^#/ {print \$0;next} {print \$0 | "sort -k1,1 -k2,2n"}' > \${filename}.vcf
         """
 }
 
@@ -396,8 +425,7 @@ workflow NANOSEQ {
         )
 
         BEDTOOLS_GENOMECOV(
-            SAMTOOLS_SORT_AND_INDEX.out.sorted_bam,
-            SAMTOOLS_SORT_AND_INDEX.out.sorted_bam_index
+            SAMTOOLS_SORT_AND_INDEX.out.sorted_bam
         )
 
         if (params.variant_caller == "medaka_haploid") {
@@ -422,6 +450,17 @@ workflow NANOSEQ {
                 SAMTOOLS_SORT_AND_INDEX.out.sorted_bam
             )
             BGZIP_AND_INDEX_VCF(FREEBAYES_VARIANT_CALLING.out.vcf_ch)
+        }
+
+        if (params.variant_caller == "clair3") {
+            SAMTOOLS_SORT_AND_INDEX.out.ref_ch
+                .combine(GET_CHROM_SIZES_AND_INDEX.out.fasta_index_ch, by: 0)
+                .set { clair3_ref_input }
+            CLAIR3_VARIANT_CALLING(
+                clair3_ref_input,
+                SAMTOOLS_SORT_AND_INDEX.out.sorted_bam
+            )
+            BGZIP_AND_INDEX_VCF(CLAIR3_VARIANT_CALLING.out.vcf_ch)
         }
 }
 

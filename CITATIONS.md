@@ -22,6 +22,10 @@
 
   > Quinlan AR, Hall IM. BEDTools: a flexible suite of utilities for comparing genomic features. Bioinformatics. 2010 Mar 15;26(6):841-2. doi: 10.1093/bioinformatics/btq033. Epub 2010 Jan 28. PubMed PMID: 20110278; PubMed Central PMCID: PMC2832824.
 
+- [Clair3](https://doi.org/10.1038/s43588-022-00387-x)
+
+  > Zheng Z, Li S, Su J, Leung A W-S, Lam T-W, Luo R. Symphonizing pileup and full-alignment for deep learning-based long-read variant calling. Nature Computational Science. 2022;2(12):797–803. doi: 10.1038/s43588-022-00387-x. [bioRxiv 474431](https://www.biorxiv.org/content/10.1101/2021.12.29.474431v2)
+
 - [Minimap2](https://pubmed.ncbi.nlm.nih.gov/29750242/)
 
   > Li H. Minimap2: pairwise alignment for nucleotide sequences. Bioinformatics. 2018 Sep 15;34(18):3094-3100. doi: 10.1093/bioinformatics/bty191. PMID: 29750242; PMCID: PMC6137996.
@@ -34,7 +38,7 @@
 
 - [pycoQC](https://doi.org/10.21105/joss.01236)
 
-  > Leger A, Leonardi T, (2019). pycoQC, interactive quality control for Oxford Nanopore Sequencing. Journal of Open Source Software, 4(34), 1236, https://doi.org/10.21105/joss.01236
+  > Leger A, Leonardi T. pycoQC, interactive quality control for Oxford Nanopore Sequencing. Journal of Open Source Software. 2019;4(34):1236. doi: 10.21105/joss.01236
 
 - [SAMtools](https://www.ncbi.nlm.nih.gov/pubmed/19505943/)
 
