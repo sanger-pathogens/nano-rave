@@ -76,4 +76,23 @@ nextflow_pipeline {
 
     }
 
+    test("Should execute the pipeline with Clair3") {
+
+        when {
+            params {
+                sequencing_manifest = "${new File(inputs, "test_manifest.csv")}"
+                reference_manifest  = "${new File(inputs, "reference_manifest.csv")}"
+                results_dir         = "${outputDir}"
+                variant_caller      = "clair3"
+                min_barcode_size    = 5
+            }
+        }
+
+        then {
+            assert workflow.success
+            verifyOutputs(outputDir, "clair3")
+        }
+
+    }
+
 }
