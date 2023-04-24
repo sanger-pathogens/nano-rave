@@ -13,6 +13,7 @@ def printHelp() {
         --reference_manifest         Manifest containing reference identifiers and paths to fastq reference files (mandatory)
         --results_dir                Specify results directory [default: ./nextflow_results] (optional)
         --variant_caller             Specify a variant caller to use [medaka (default), medaka_haploid, freebayes, clair3] (optional)
+        --clair3_args                Specify clair3 variant calling parameters - must include model e.g. --clair3_args "--model_path /opt/models/r941_prom_sup_g5014" (optional)
         --min_barcode_dir_size       Specify the expected minimum size of the barcode directories, in MB. Must be > 0. [default: 10] (optional)
         --help                       Print this help message (optional)
     """.stripIndent()
@@ -99,6 +100,29 @@ def validate_results_dir(results_dir) {
     return 0
 }
 
+def validate_clair3_args(clair3_args) {
+    def invalid_options = ['--bam_fn', '--ref_fn', '--threads', '--platform', '--output']
+    def required_options = ['--model_path']
+    def errors = 0
+    if (params.variant_caller != "clair3" && clair3_args) {
+        log.error("Clair3 arguments were provided but clair3 was not set as the --variant_caller!")
+        errors += 1
+    } else if (params.variant_caller == "clair3" && clair3_args) {
+        def invalid_options_found = invalid_options.findAll { clair3_args.contains(it) }
+        if (invalid_options_found) {
+            log.error("The following clair3 options were provided in --clair3_args, but are reserved for use by this pipeline: ${invalid_options_found}")
+            errors += 1
+        }
+        def required_options_found = required_options.findAll { clair3_args.contains(it) }
+        def required_options_not_found = required_options.minus(required_options_found)
+        if (required_options_not_found) {
+            log.error("The following clair3 options were not provided in --clair3_args, but are required for use by this pipeline: ${required_options_not_found}")
+            errors += 1
+        }
+    }
+    return errors
+}
+
 def validate_parameters() {
     def errors = 0
 
@@ -107,6 +131,7 @@ def validate_parameters() {
     errors += validate_choice_param("--variant_caller", params.variant_caller, ["medaka", "medaka_haploid", "freebayes", "clair3"])
     errors += validate_min_barcode_dir_size("--min_barcode_dir_size", params.min_barcode_dir_size)
     errors += validate_results_dir(params.results_dir)
+    errors += validate_clair3_args(params.clair3_args)
 
     if (errors > 0) {
         log.error(String.format("%d errors detected", errors))
@@ -346,7 +371,6 @@ process CLAIR3_VARIANT_CALLING {
     output:
         path("*.vcf"), emit: vcf_ch
     script:
-        model="r941_prom_sup_g5014"
         """
         filename=\$(basename ${sorted_bam_file} | awk -F "." '{ print \$1}')
         
@@ -355,11 +379,8 @@ process CLAIR3_VARIANT_CALLING {
             --ref_fn=${reference} \
             --threads=${task.cpus} \
             --platform="ont" \
-            --model_path="/opt/models/${model}" \
-            --no_phasing_for_fa \
-            --include_all_ctgs \
-            --haploid_precise \
-            --output=.
+            --output=. \
+            ${params.clair3_args}
 
         if [[ ! -s "merge_output.vcf.gz" ]]; then
             cp pileup.vcf.gz merge_output.vcf.gz
