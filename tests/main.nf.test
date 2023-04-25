@@ -84,6 +84,7 @@ nextflow_pipeline {
                 reference_manifest  = "${new File(inputs, "reference_manifest.csv")}"
                 results_dir         = "${outputDir}"
                 variant_caller      = "clair3"
+                clair3_args         = "--model_path /opt/models/r941_prom_sup_g5014 --no_phasing_for_fa --include_all_ctgs --haploid_precise"
                 min_barcode_size    = 5
             }
         }
