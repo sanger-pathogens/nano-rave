@@ -43,22 +43,25 @@ Nextflow pipeline designed for rapid onsite QC and variant calling of Oxford Nan
    module load nano-rave/<version>
    ```
 
-4. The pipeline should now be available as a command
+4. The pipeline should now be directly available with the command `nano-rave`
    ```bash
    nano-rave --help
    ```
 
 5. Start your analysis  
-   Note: To use the appropriate Sanger configuration, please run with `-profile sanger_local` option.
 
-   Example:
+   To use the appropriate Sanger configuration, please run with `-profile sanger_local` option.
+
+   You are also advised to run the workflow in a submitted job under the `oversubscribed` queue.  
+   Here is an example command:
    ```bash
+   bsub -o nano-rave.o -e nano-rave.e -q oversubscribed -R "select[mem>16000] rusage[mem=16000]" -M16000 \
    nano-rave -profile sanger_local --sequencing_manifest ./test_data/pipeline/inputs/test_manifest.csv --reference_manifest ./test_data/pipeline/inputs/reference_manifest.csv --variant_caller medaka_haploid --min_barcode_dir_size 5 --results_dir my_output
    ```
 
    See [usage](#usage) for all available pipeline options.
 
-6. Once your run has finished, check output in the `results_dir` and clean up any intermediate files. To do this (assuming no other pipelines are running from the current working directory) run:
+7. Once your run has finished, check output in the `results_dir` and clean up any intermediate files. To do this (assuming no other pipelines are running from the current working directory) run:
 
    ```bash
    rm -rf work .nextflow*
@@ -84,7 +87,7 @@ The sequencing manifest is in a csv format and contains two columns
 * `sequencing_dir`
 : folder containing all the Oxford Nanopore sequencing data
 * `sequence_summary_file`
-: required for QC - usually found in the sequencing directory 
+: required for QC - usually found in the sequencing directory. In this file, the paths to the fast5 read files (first column) must be full/absolute paths. 
 
 The pipeline assumes that `sequencing_dir` contains Guppy output for a particular sample. In particular, the parent and child folders of the given `sequencing_dir` assume the following structure:
 ```
