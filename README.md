@@ -172,7 +172,7 @@ Developer contributions to this pipeline will only be accepted if all pipeline t
 
    If running on Sanger HPC cluster, add the option `--profile sanger_lsf`.
 
-5. Submit a PR.
+4. Submit a PR.
 
 ## Citations
 If you use this pipeline for your analysis, please cite:
