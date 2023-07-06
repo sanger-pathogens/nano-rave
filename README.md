@@ -43,22 +43,29 @@ Nextflow pipeline designed for rapid onsite QC and variant calling of Oxford Nan
    module load nano-rave/<version>
    ```
 
-4. The pipeline should now be available as a command
+4. The pipeline should now be directly available with the command `nano-rave`
    ```bash
    nano-rave --help
    ```
 
 5. Start your analysis  
-   Note: To use the appropriate Sanger configuration, please run with `-profile sanger_lsf` option.
+
+   To use the appropriate Sanger configuration, please run with `-profile sanger_lsf` option.
+
+   You are also advised to run the workflow in a submitted job under the `oversubscribed` queue.  
+Here is an example command:
+```shnano-rave -profile sanger_lsf --sequencing_manifest seq.manifest.csv --reference_manifest ref.manifest.csv --results_dir nano-rave_out
 
    Example:
    ```bash
+   module load nano-rave/v1.0.1
+   bsub -o nano-rave.o -e nano-rave.e -q oversubscribed -R "select[mem>4000] rusage[mem=4000]" -M4000 \
    nano-rave -profile sanger_lsf --sequencing_manifest ./test_data/pipeline/inputs/test_manifest.csv --reference_manifest ./test_data/pipeline/inputs/reference_manifest.csv --variant_caller medaka_haploid --min_barcode_dir_size 5 --results_dir my_output
    ```
 
    See [usage](#usage) for all available pipeline options.
 
-6. Once your run has finished, check output in the `results_dir` and clean up any intermediate files. To do this (assuming no other pipelines are running from the current working directory) run:
+7. Once your run has finished, check output in the `results_dir` and clean up any intermediate files. To do this (assuming no other pipelines are running from the current working directory) run:
 
    ```bash
    rm -rf work .nextflow*
@@ -75,15 +82,6 @@ Options:
     --variant_caller             Specify a variant caller to use [medaka (default), medaka_haploid, freebayes] (optional)
     --min_barcode_dir_size       Specify the expected minimum size of the barcode directories, in MB. Must be > 0. [default: 10] (optional)
     --help                       Print this help message (optional)
-```
-
-### Sanger HPC
-If running on Sanger HPC cluster, nano-rave is accessible through the module `nano-rave/v1.0.1`; having loaded the module, the workflow can be executed with the command `nano-rave`. You also need to add the option `-profile sanger_lsf` to the command.
-You are also advised to run the workflow in a submitted job under the `oversubscribed` queue.  
-Here is an example command:
-```sh
-module load nano-rave/v1.0.1
-bsub -o nano-rave.o -e nano-rave.e -q oversubscribed -R "select[mem>4000] rusage[mem=4000]" -M4000 nano-rave -profile sanger_lsf --sequencing_manifest seq.manifest.csv --reference_manifest ref.manifest.csv --results_dir nano-rave_out
 ```
 
 ## Sequencing manifest format
