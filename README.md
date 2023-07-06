@@ -87,7 +87,7 @@ The sequencing manifest is in a csv format and contains two columns
 * `sequencing_dir`
 : folder containing all the Oxford Nanopore sequencing data
 * `sequence_summary_file`
-: required for QC - usually found in the sequencing directory
+: required for QC - usually found in the sequencing directory. In this file, the paths to the fast5 read files (first column) must be a full path. 
 
 The pipeline assumes that `sequencing_dir` contains Guppy output for a particular sample. In particular, the parent and child folders of the given `sequencing_dir` assume the following structure:
 ```
