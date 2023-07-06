@@ -77,6 +77,15 @@ Options:
     --help                       Print this help message (optional)
 ```
 
+### Sanger HPC
+If running on Sanger HPC cluster, nano-rave is accessible through the module `nano-rave/v1.0.1`; having loaded the module, the workflow can be executed with the command `nano-rave`. You also need to add the option `-profile sanger_lsf` to the command.
+You are also advised to run the workflow in a submitted job under the `oversubscribed` queue.  
+Here is an example command:
+```sh
+module load nano-rave/v1.0.1
+bsub -o nano-rave.o -e nano-rave.e -q oversubscribed -R "select[mem>4000] rusage[mem=4000]" -M4000 nano-rave -profile sanger_lsf --sequencing_manifest seq.manifest.csv --reference_manifest ref.manifest.csv --results_dir nano-rave_out
+```
+
 ## Sequencing manifest format
 The sequencing manifest is in a csv format and contains two columns
 
@@ -168,7 +177,7 @@ Developer contributions to this pipeline will only be accepted if all pipeline t
 
    If running on Sanger HPC cluster, add the option `--profile sanger_lsf`.
 
-4. Submit a PR.
+5. Submit a PR.
 
 ## Citations
 If you use this pipeline for your analysis, please cite:
