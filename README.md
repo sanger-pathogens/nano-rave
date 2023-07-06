@@ -53,10 +53,7 @@ Nextflow pipeline designed for rapid onsite QC and variant calling of Oxford Nan
    To use the appropriate Sanger configuration, please run with `-profile sanger_lsf` option.
 
    You are also advised to run the workflow in a submitted job under the `oversubscribed` queue.  
-Here is an example command:
-```shnano-rave -profile sanger_lsf --sequencing_manifest seq.manifest.csv --reference_manifest ref.manifest.csv --results_dir nano-rave_out
-
-   Example:
+   Here is an example command:
    ```bash
    module load nano-rave/v1.0.1
    bsub -o nano-rave.o -e nano-rave.e -q oversubscribed -R "select[mem>4000] rusage[mem=4000]" -M4000 \
@@ -90,7 +87,7 @@ The sequencing manifest is in a csv format and contains two columns
 * `sequencing_dir`
 : folder containing all the Oxford Nanopore sequencing data
 * `sequence_summary_file`
-: required for QC - usually found in the sequencing directory 
+: required for QC - usually found in the sequencing directory
 
 The pipeline assumes that `sequencing_dir` contains Guppy output for a particular sample. In particular, the parent and child folders of the given `sequencing_dir` assume the following structure:
 ```
