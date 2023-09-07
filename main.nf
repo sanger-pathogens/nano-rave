@@ -183,7 +183,7 @@ process PYCOQC {
     container "quay.io/biocontainers/pycoqc:2.5.2--py_0"
     publishDir "${params.results_dir}/qc/pycoqc", mode: 'copy', overwrite: true
     input:
-        tuple val(sequencing_dir), val(sequence_summary_file)
+        tuple val(sequencing_dir), path(sequence_summary_file)
     output:
         path("*.html")
         path("*.json")
@@ -364,7 +364,7 @@ process FREEBAYES_VARIANT_CALLING {
 }
 
 process CLAIR3_VARIANT_CALLING {
-    container "docker.io/hkubal/clair3@sha256:3c4c6db3bb6118e3156630ee62de8f6afef7f7acc9215199f9b6c1b2e1926cf8"  // Includes models
+    container "docker.io/hkubal/clair3@sha256:857af16c759b0893fc757511a17c1efdfe253cbb64dffbcc8eecac0d33a60f60"  // Includes models
     input:
         tuple val(ref_id), path(reference), path(reference_index)
         tuple path(sorted_bam_file), path(sorted_bam_index)

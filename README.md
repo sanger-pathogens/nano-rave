@@ -153,7 +153,7 @@ The pipeline makes use of docker images to ensure reproducibility. This version 
 | Software  | Version | Image URL                                             |
 |-----------|---------|-------------------------------------------------------|
 | bedtools  | 2.29.2  | quay.io/biocontainers/bedtools:2.29.2--hc088bd4_0     |
-| clair3    | 1.0.0   | docker.io/hkubal/clair3@sha256:3c4c6db3bb6118e3156630ee62de8f6afef7f7acc9215199f9b6c1b2e1926cf8   |
+| clair3    | 1.0.4   | docker.io/hkubal/clair3    | 1.0.4   | docker.io/hkubal/clair3@sha256:857af16c759b0893fc757511a17c1efdfe253cbb64dffbcc8eecac0d33a60f60   |
 | freebayes | 1.3.5   | docker.io/gfanz/freebayes@sha256:d32bbce0216754bfc7e01ad6af18e74df3950fb900de69253107dc7bcf4e1351 |
 | medaka    | 1.4.4   | quay.io/biocontainers/medaka:1.4.4--py38h130def0_0    |
 | minimap2  | 2.17    | quay.io-biocontainers-minimap2:2.17--hed695b0_3       |
