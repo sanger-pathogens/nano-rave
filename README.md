@@ -81,6 +81,13 @@ Options:
     --help                       Print this help message (optional)
 ```
 
+### Note:
+- Please refer to https://github.com/HKU-BAL/Clair3#usage for a comprehesive list of options that can be used with `--clair3_args`. 
+Currently, by default, the software will assume you will want to variant call human chromosome contigs.
+If this is not the case, or you wish to use a custom set of contigs, please see clair3 options `--include_all_ctgs` or `--ctg_name`.
+You may also want to skip phasing with clair3 option `--no_phasing_for_fa` if this is not required or useful for you.
+
+
 ## Sequencing manifest format
 The sequencing manifest is in a csv format and contains two columns
 
