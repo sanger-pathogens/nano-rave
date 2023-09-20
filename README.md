@@ -160,7 +160,7 @@ The pipeline makes use of docker images to ensure reproducibility. This version 
 | nanoplot  | 1.38.0  | quay.io/biocontainers/nanoplot:1.38.0--pyhdfd78af_0   |
 | pycoqc    | 2.5.2   | quay.io/biocontainers/pycoqc:2.5.2--py_0              |
 | samtools  | 1.15.1  | quay.io/biocontainers/samtools:1.15.1--h1170115_0     |
-| tabix     | 1.11    | quay.io/biocontainers/tabix:1.11--hdfd78af_0.img      |
+| tabix     | 1.11    | quay.io/biocontainers/tabix:1.11--hdfd78af_0          |
 
 ## Contributions and testing
 
