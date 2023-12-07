@@ -48,16 +48,19 @@ Nextflow pipeline designed for rapid onsite QC and variant calling of Oxford Nan
    nano-rave --help
    ```
 
-5. Start your analysis  
+5. before excuting `nano-rave`, it is recommended to set the `$SINGULARITY_CACHEDIR` and `$NXF_SINGULARITY_CACHEDIR` environment variables so that they both point to a folder with enough space. This location is that one where singularity images supporting the pipeline dependencies will be downloaded; by default it is downloaded inside your home directory (spcifically in `${HOME}/.singularity/cache`), which has space limitations and will rapidly fill up, causing the pipeline to fail. On the Sanger HPC, it is recommended to point to a location on your lustre scratch space.
+
+6. Start your analysis  
 
    To use the appropriate Sanger configuration, please run with `-profile sanger_local` option.
-
-   You are also advised to run the workflow in a submitted job under the `oversubscribed` queue.  
    Here is an example command:
    ```bash
-   bsub -o nano-rave.o -e nano-rave.e -q oversubscribed -R "select[mem>16000] rusage[mem=16000]" -M16000 \
+   bsub -o nano-rave.o -e nano-rave.e -q long -n 4 -R "select[mem>16000] rusage[mem=16000]" -M16000 \
    nano-rave -profile sanger_local --sequencing_manifest ./test_data/pipeline/inputs/test_manifest.csv --reference_manifest ./test_data/pipeline/inputs/reference_manifest.csv --variant_caller medaka_haploid --min_barcode_dir_size 5 --results_dir my_output
    ```
+   This will run the whole pipeline i.e. all per-sample processes within a single siubmitted job, so please tailor your resource request accordingly.
+
+   NB: we are working on providing a `sanger_lsf` profile that will enable th e proper use of LSF cluster integration, meaning that each process is executed by submitting as a separate job on the HPC; under such configuration, you would be advised to submitted the main job (workflow head process) to the `oversubscribed` queue.  
 
    See [usage](#usage) for all available pipeline options.
 
@@ -185,13 +188,21 @@ Developer contributions to this pipeline will only be accepted if all pipeline t
 4. Submit a PR.
 
 ## Citations
-If you use this pipeline for your analysis, please cite:
+If you use this pipeline for your analysis, please cite our paper:
 
-> Nanopore sequencing for real-time genomic surveillance of Plasmodium falciparum
+> **Drug resistance and vaccine target surveillance of Plasmodium falciparum using nanopore sequencing in Ghana**
+>
+> Sophia T. Girgis, Edem Adika, Felix E. Nenyewodey, Dodzi K. Senoo Jnr, Joyce M. Ngoi, Kukua Bandoh, Oliver Lorenz, Guus van de Steeg, Alexandria J. R. Harrott, Sebastian Nsoh, Kim Judge, Richard D. Pearson, Jacob Almagro-Garcia, Samirah Saiid, Solomon Atampah, Enock K. Amoako, Collins M. Morang’a, Victor Asoala, Elrmion S. Adjei, William Burden, William Roberts-Sengier, Eleanor Drury, Megan L. Pierce, Sónia Gonçalves, Gordon A. Awandare, Dominic P. Kwiatkowski, Lucas N. Amenga-Etego & William L. Hamilton
+> 
+> _Nature Microbiology_ 8:2365–2377 (2023); doi: [10.1038/s41564-023-01516-6](https://doi.org/10.1038/s41564-023-01516-6).
+
+Which was initially released as a pre-print:
+
+> **Nanopore sequencing for real-time genomic surveillance of Plasmodium falciparum**
 >
 > Sophia T. Girgis, Edem Adika, Felix E. Nenyewodey, Dodzi K. Senoo Jnr, Joyce M. Ngoi, Kukua Bandoh, Oliver Lorenz, Guus van de Steeg, Sebastian Nsoh, Kim Judge, Richard D. Pearson, Jacob Almagro-Garcia, Samirah Saiid, Solomon Atampah, Enock K. Amoako, Collins M. Morang’a, Victor Asoala, Elrmion S. Adjei, William Burden, William Roberts-Sengier, Eleanor Drury, Sónia Gonçalves, Gordon A. Awandare, Dominic P. Kwiatkowski, Lucas N. Amenga-Etego, William L. Hamilton
 >
-> [bioRxiv 521122](https://www.biorxiv.org/content/10.1101/2022.12.20.521122v1); doi: [10.1101/521122](https://doi.org/10.1101/2022.12.20.521122)
+> _bioRxiv_ 2022.12.20.521122; doi: [10.1101/2022.12.20.521122](https://doi.org/10.1101/2022.12.20.521122)
 
 This pipeline was adapted from the [nf-core/nanoseq](https://github.com/nf-core/nanoseq) pipeline.
 
