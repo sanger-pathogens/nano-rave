@@ -48,7 +48,9 @@ Nextflow pipeline designed for rapid onsite QC and variant calling of Oxford Nan
    nano-rave --help
    ```
 
-5. Start your analysis  
+5. before excuting `nano-rave`, it is recommended to set the `$SINGULARITY_CACHEDIR` and `$NXF_SINGULARITY_CACHEDIR` environment variables so that they both point to a folder with enough space. This location is that one where singularity images supporting the pipeline dependencies will be downloaded; by default it is downloaded inside your home directory (spcifically in `${HOME}/.singularity/cache`), which has space limitations and will rapidly fill up, causing the pipeline to fail. On the Sanger HPC, it is recommended to point to a location on your lustre scratch space.
+
+6. Start your analysis  
 
    To use the appropriate Sanger configuration, please run with `-profile sanger_local` option.
    Here is an example command:
