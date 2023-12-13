@@ -79,8 +79,9 @@ Options:
     --reference_manifest         Manifest containing reference identifiers and paths to fastq reference files (mandatory)
     --results_dir                Specify results directory [default: ./nextflow_results] (optional)
     --variant_caller             Specify a variant caller to use [medaka (default), medaka_haploid, freebayes, clair3] (optional)
-    --min_barcode_dir_size       Specify the expected minimum size of the barcode directories, in MB. Must be > 0. [default: 10] (optional)
     --clair3_args                Specify clair3 variant calling parameters - must include model e.g. --clair3_args "--model_path /opt/models/r941_prom_sup_g5014" (optional)
+    --min_barcode_dir_size       Specify the expected minimum size of the barcode directories, in MB. Must be > 0. [default: 10] (optional)
+    --keep_bam_files             Save BAM files in results directory [default: false] (optional)
     --help                       Print this help message (optional)
 ```
 
