@@ -16,6 +16,7 @@ def printHelp() {
         --clair3_args                Specify clair3 variant calling parameters - must include model e.g. --clair3_args "--model_path /opt/models/r941_prom_sup_g5014" (optional)
         --min_barcode_dir_size       Specify the expected minimum size of the barcode directories, in MB. Must be > 0. [default: 10] (optional)
         --keep_bam_files             Save BAM files in results directory [default: false] (optional)
+        --filter_unmapped_reads      Remove unmapped reads from the BAM files [default: false] (optional)
         --help                       Print this help message (optional)
     """.stripIndent()
 }
@@ -264,11 +265,20 @@ process SAMTOOLS_VIEW_SAM_TO_BAM {
     output:
         path("*.bam"), emit: bam_file
         tuple val(ref_id), path(reference), emit: ref_ch
-    script:
-        """
-        filename=\$(basename $sam_file | awk -F "." '{ print \$1}')
-        samtools view -b -h -O BAM -@ 2 -o \${filename}.bam $sam_file
-        """
+    if (params.filter_unmapped_reads) {
+        script:
+            """
+            filename=\$(basename $sam_file | awk -F "." '{ print \$1}')
+            samtools view -F 4 -b -h -O BAM -@ 2 -o \${filename}.bam $sam_file
+            """
+    }
+    else {
+        script:
+            """
+            filename=\$(basename $sam_file | awk -F "." '{ print \$1}')
+            samtools view -b -h -O BAM -@ 2 -o \${filename}.bam $sam_file
+            """
+    }
 }
 
 process SAMTOOLS_SORT_AND_INDEX {
