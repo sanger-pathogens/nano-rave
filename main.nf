@@ -15,6 +15,7 @@ def printHelp() {
         --variant_caller             Specify a variant caller to use [medaka (default), medaka_haploid, freebayes, clair3] (optional)
         --clair3_args                Specify clair3 variant calling parameters - must include model e.g. --clair3_args "--model_path /opt/models/r941_prom_sup_g5014" (optional)
         --min_barcode_dir_size       Specify the expected minimum size of the barcode directories, in MB. Must be > 0. [default: 10] (optional)
+        --keep_bam_files             Save BAM files in results directory [default: false] (optional)
         --help                       Print this help message (optional)
     """.stripIndent()
 }
@@ -272,6 +273,9 @@ process SAMTOOLS_VIEW_SAM_TO_BAM {
 
 process SAMTOOLS_SORT_AND_INDEX {
     container "quay.io/biocontainers/samtools:1.15.1--h1170115_0"
+    if (params.keep_bam_files) {
+        publishDir "${params.results_dir}/bams", mode: 'copy', overwrite: true, pattern: "*.bam*"
+    }
     input:
         tuple val(ref_id), path(reference)
         path(bam_file)
