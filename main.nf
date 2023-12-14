@@ -16,7 +16,6 @@ def printHelp() {
         --clair3_args                Specify clair3 variant calling parameters - must include model e.g. --clair3_args "--model_path /opt/models/r941_prom_sup_g5014" (optional)
         --min_barcode_dir_size       Specify the expected minimum size of the barcode directories, in MB. Must be > 0. [default: 10] (optional)
         --keep_bam_files             Save BAM files in results directory [default: false] (optional)
-        --filter_unmapped_reads      Remove unmapped reads from the BAM files [default: false] (optional)
         --help                       Print this help message (optional)
     """.stripIndent()
 }
@@ -257,7 +256,7 @@ process MINIMAP2_ALIGN {
         """
 }
 
-process SAMTOOLS_VIEW_SAM_TO_BAM_REMOVE_UNMAPPED_READS {
+process SAMTOOLS_VIEW_SAM_TO_BAM {
     container "quay.io/biocontainers/samtools:1.15.1--h1170115_0"
     input:
         tuple val(ref_id), path(reference)
@@ -269,21 +268,6 @@ process SAMTOOLS_VIEW_SAM_TO_BAM_REMOVE_UNMAPPED_READS {
         """
         filename=\$(basename $sam_file | awk -F "." '{ print \$1}')
         samtools view -F 4 -b -h -O BAM -@ 2 -o \${filename}.bam $sam_file
-        """
-}
-
-process SAMTOOLS_VIEW_SAM_TO_BAM_KEEP_UNMAPPED_READS {
-    container "quay.io/biocontainers/samtools:1.15.1--h1170115_0"
-    input:
-        tuple val(ref_id), path(reference)
-        path(sam_file)
-    output:
-        path("*.bam"), emit: bam_file
-        tuple val(ref_id), path(reference), emit: ref_ch
-    script:
-        """
-        filename=\$(basename $sam_file | awk -F "." '{ print \$1}')
-        samtools view -b -h -O BAM -@ 2 -o \${filename}.bam $sam_file
         """
 }
 
@@ -455,18 +439,10 @@ workflow NANOSEQ {
             fastq_ch
         )
 
-        if (params.filter_unmapped_reads) {
-            SAMTOOLS_VIEW_SAM_TO_BAM_REMOVE_UNMAPPED_READS(
-                MINIMAP2_ALIGN.out.ref_ch,
-                MINIMAP2_ALIGN.out.sam_file
-            )
-        }
-        else {
-            SAMTOOLS_VIEW_SAM_TO_BAM_KEEP_UNMAPPED_READS(
-                MINIMAP2_ALIGN.out.ref_ch,
-                MINIMAP2_ALIGN.out.sam_file
-            )
-        }
+        SAMTOOLS_VIEW_SAM_TO_BAM(
+            MINIMAP2_ALIGN.out.ref_ch,
+            MINIMAP2_ALIGN.out.sam_file
+        )
 
         SAMTOOLS_SORT_AND_INDEX(
             SAMTOOLS_VIEW_SAM_TO_BAM.out.ref_ch,
