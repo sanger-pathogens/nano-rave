@@ -167,6 +167,7 @@ process SORT_FASTQS {
 }
 
 process NANOPLOT_QC {
+    conda "bioconda::nanoplot=1.38.0"
     container "quay.io/biocontainers/nanoplot:1.38.0--pyhdfd78af_0"
     publishDir "${params.results_dir}/qc/nanoplot", mode: 'copy', overwrite: true
     input:
@@ -181,6 +182,7 @@ process NANOPLOT_QC {
 }
 
 process PYCOQC {
+    conda "bioconda::pycoqc=2.5.2"
     container "quay.io/biocontainers/pycoqc:2.5.2--py_0"
     publishDir "${params.results_dir}/qc/pycoqc", mode: 'copy', overwrite: true
     input:
@@ -196,6 +198,7 @@ process PYCOQC {
 }
 
 process NORMALISE_FASTAS {
+    conda "conda-forge::biopython=1.78"
     container "quay.io/biocontainers/biopython:1.78"
     input:
         tuple val(ref_id), path(reference)
@@ -214,6 +217,7 @@ process NORMALISE_FASTAS {
 }
 
 process GET_CHROM_SIZES_AND_INDEX {
+    conda "bioconda::samtools=1.15.1"
     container "quay.io/biocontainers/samtools:1.15.1--h1170115_0"
     input:
         tuple val(ref_id), path(reference)
@@ -227,6 +231,7 @@ process GET_CHROM_SIZES_AND_INDEX {
 }
 
 process MINIMAP2_INDEX {
+    conda "bioconda::minimap2=2.17"
     container "quay.io/biocontainers/minimap2:2.17--hed695b0_3"
     input:
         tuple val(ref_id), path(reference)
@@ -240,6 +245,7 @@ process MINIMAP2_INDEX {
 }
 
 process MINIMAP2_ALIGN {
+    conda "bioconda::minimap2=2.17"
     container "quay.io/biocontainers/minimap2:2.17--hed695b0_3"
     input:
         tuple val(ref_id), path(reference)
@@ -257,6 +263,7 @@ process MINIMAP2_ALIGN {
 }
 
 process SAMTOOLS_VIEW_SAM_TO_BAM {
+    conda "bioconda::samtools=1.15.1"
     container "quay.io/biocontainers/samtools:1.15.1--h1170115_0"
     input:
         tuple val(ref_id), path(reference)
@@ -272,6 +279,7 @@ process SAMTOOLS_VIEW_SAM_TO_BAM {
 }
 
 process SAMTOOLS_SORT_AND_INDEX {
+    conda "bioconda::samtools=1.15.1"
     container "quay.io/biocontainers/samtools:1.15.1--h1170115_0"
     if (params.keep_bam_files) {
         publishDir "${params.results_dir}/bams", mode: 'copy', overwrite: true, pattern: "*.bam*"
@@ -291,6 +299,7 @@ process SAMTOOLS_SORT_AND_INDEX {
 }
 
 process BEDTOOLS_GENOMECOV {
+    conda "bioconda::bedtools=2.29.2"
     container "quay.io/biocontainers/bedtools:2.29.2--hc088bd4_0"
     publishDir "${params.results_dir}/genome_coverage", mode: 'copy', overwrite: true, pattern: "*.bedGraph"
     input:
@@ -307,6 +316,7 @@ process BEDTOOLS_GENOMECOV {
 }
 
 process MEDAKA_VARIANT_CALLING {
+    conda "bioconda::medaka=1.4.4"
     container "quay.io/biocontainers/medaka:1.4.4--py38h130def0_0"
     input:
         tuple val(ref_id), path(reference)
@@ -328,6 +338,7 @@ process MEDAKA_VARIANT_CALLING {
 }
 
 process MEDAKA_HAPLOID_VARIANT_CALLING {
+    conda "bioconda::medaka=1.4.4"
     container "quay.io/biocontainers/medaka:1.4.4--py38h130def0_0"
     input:
         tuple val(ref_id), path(reference)
@@ -349,7 +360,8 @@ process MEDAKA_HAPLOID_VARIANT_CALLING {
 }
 
 process FREEBAYES_VARIANT_CALLING {
-    container "docker.io/gfanz/freebayes@sha256:d32bbce0216754bfc7e01ad6af18e74df3950fb900de69253107dc7bcf4e1351"
+    conda "bioconda::freebayes=1.3.7"
+    container "quay.io/biocontainers/freebayes:1.3.7--h1870644_0"
     input:
         tuple val(ref_id), path(reference)
         tuple path(sorted_bam_file), path(sorted_bam_index)
@@ -368,6 +380,7 @@ process FREEBAYES_VARIANT_CALLING {
 }
 
 process CLAIR3_VARIANT_CALLING {
+    conda "bioconda::clair3=1.0.0"
     container "docker.io/hkubal/clair3@sha256:3c4c6db3bb6118e3156630ee62de8f6afef7f7acc9215199f9b6c1b2e1926cf8"  // Includes models
     input:
         tuple val(ref_id), path(reference), path(reference_index)
@@ -395,6 +408,7 @@ process CLAIR3_VARIANT_CALLING {
 }
 
 process BGZIP_AND_INDEX_VCF {
+    conda "bioconda::tabix=1.11"
     container "quay.io/biocontainers/tabix:1.11--hdfd78af_0"
     publishDir "${params.results_dir}/variant_calling", mode: 'copy', overwrite: true
     input:
