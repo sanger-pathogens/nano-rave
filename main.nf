@@ -382,11 +382,13 @@ process FREEBAYES_VARIANT_CALLING {
 process CLAIR3_VARIANT_CALLING {
     conda "bioconda::clair3=1.0.0"
     container "docker.io/hkubal/clair3@sha256:3c4c6db3bb6118e3156630ee62de8f6afef7f7acc9215199f9b6c1b2e1926cf8"  // Includes models
+    publishDir "${params.results_dir}/variant_calling/gvcf", mode: 'copy', overwrite: true, pattern: "*.gvcf.gz*"
     input:
         tuple val(ref_id), path(reference), path(reference_index)
         tuple path(sorted_bam_file), path(sorted_bam_index)
     output:
         path("*.vcf"), emit: vcf_ch
+        tuple path("*.gvcf.gz"), path("*.gvcf.gz.tbi"),  optional: true, emit: gvcf_ch
     script:
         """
         filename=\$(basename ${sorted_bam_file} | awk -F "." '{ print \$1}')
@@ -404,13 +406,16 @@ process CLAIR3_VARIANT_CALLING {
         fi
         # sort vcf by index to stop tabix crying
         zcat merge_output.vcf.gz | awk '\$1 ~ /^#/ {print \$0;next} {print \$0 | "sort -k1,1 -k2,2n"}' > \${filename}.vcf
+        # rename for publishing
+        mv merge_output.gvcf.gz \${filename}.gvcf.gz
+        mv merge_output.gvcf.gz.tbi \${filename}.gvcf.gz.tbi
         """
 }
 
 process BGZIP_AND_INDEX_VCF {
     conda "bioconda::tabix=1.11"
     container "quay.io/biocontainers/tabix:1.11--hdfd78af_0"
-    publishDir "${params.results_dir}/variant_calling", mode: 'copy', overwrite: true
+    publishDir "${params.results_dir}/variant_calling/vcf", mode: 'copy', overwrite: true
     input:
         path(vcf_file)
 
