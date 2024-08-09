@@ -406,9 +406,11 @@ process CLAIR3_VARIANT_CALLING {
         fi
         # sort vcf by index to stop tabix crying
         zcat merge_output.vcf.gz | awk '\$1 ~ /^#/ {print \$0;next} {print \$0 | "sort -k1,1 -k2,2n"}' > \${filename}.vcf
-        # rename for publishing
-        mv merge_output.gvcf.gz \${filename}.gvcf.gz
-        mv merge_output.gvcf.gz.tbi \${filename}.gvcf.gz.tbi
+        if [[ -f "merge_output.gvcf.gz" ]]; then
+            # rename for publishing
+            mv merge_output.gvcf.gz \${filename}.gvcf.gz
+            mv merge_output.gvcf.gz.tbi \${filename}.gvcf.gz.tbi
+        fi
         """
 }
 
