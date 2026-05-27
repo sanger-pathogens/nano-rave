@@ -101,9 +101,9 @@ The pipeline requires two manifest files.
 
 A CSV file with two columns:
 
-| Column | Description |
-| --- | --- |
-| `sequencing_dir` | Path to the directory containing basecaller output for a sample. Must contain a `fastq_pass/barcode*/` subdirectory structure. |
+| Column                  | Description                                                                                                                          |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| `sequencing_dir`        | Path to the directory containing basecaller output for a sample. Must contain a `fastq_pass/barcode*/` subdirectory structure.       |
 | `sequence_summary_file` | Path to the sequencing summary file produced by the basecaller (used by PycoQC). Paths to FAST5 files in this file must be absolute. |
 
 Example:
@@ -134,10 +134,10 @@ Only barcode directories whose total size exceeds `--min_barcode_dir_size` (defa
 
 A CSV file with two columns:
 
-| Column | Description |
-| --- | --- |
-| `reference_id` | Identifier for the reference (e.g. gene name or genome name). |
-| `reference_path` | Path to the reference file in FASTA format. |
+| Column           | Description                                                   |
+| ---------------- | ------------------------------------------------------------- |
+| `reference_id`   | Identifier for the reference (e.g. gene name or genome name). |
+| `reference_path` | Path to the reference file in FASTA format.                   |
 
 Example (amplicon data):
 
@@ -178,43 +178,43 @@ nextflow_results/
 
 **Required inputs**
 
-| Option | Type | Default | Description |
-| --- | --- | --- | --- |
-| `--sequencing_manifest` | `path` | — | Manifest CSV with `sequencing_dir` and `sequence_summary_file` columns (mandatory). |
-| `--reference_manifest` | `path` | `./reference_manifest.csv` | Manifest CSV with `reference_id` and `reference_path` columns (mandatory). |
+| Option                  | Type   | Default                    | Description                                                                         |
+| ----------------------- | ------ | -------------------------- | ----------------------------------------------------------------------------------- |
+| `--sequencing_manifest` | `path` | —                          | Manifest CSV with `sequencing_dir` and `sequence_summary_file` columns (mandatory). |
+| `--reference_manifest`  | `path` | `./reference_manifest.csv` | Manifest CSV with `reference_id` and `reference_path` columns (mandatory).          |
 
 ---
 
 **Variant calling**
 
-| Option | Type | Default | Description |
-| --- | --- | --- | --- |
-| `--variant_caller` | `string` | `medaka` | Variant caller to use. One of: `medaka`, `medaka_haploid`, `freebayes`, `clair3`. |
-| `--clair3_args` | `string` | `""` | Additional arguments to pass to Clair3. Must include `--model_path`. See [Advanced usage](#advanced-usage). |
+| Option             | Type     | Default  | Description                                                                                                 |
+| ------------------ | -------- | -------- | ----------------------------------------------------------------------------------------------------------- |
+| `--variant_caller` | `string` | `medaka` | Variant caller to use. One of: `medaka`, `medaka_haploid`, `freebayes`, `clair3`.                           |
+| `--clair3_args`    | `string` | `""`     | Additional arguments to pass to Clair3. Must include `--model_path`. See [Advanced usage](#advanced-usage). |
 
 ---
 
 **Read filtering**
 
-| Option | Type | Default | Description |
-| --- | --- | --- | --- |
-| `--min_barcode_dir_size` | `integer` | `10` | Minimum size (MB) of a barcode directory to be included. Must be > 0. |
+| Option                   | Type      | Default | Description                                                           |
+| ------------------------ | --------- | ------- | --------------------------------------------------------------------- |
+| `--min_barcode_dir_size` | `integer` | `10`    | Minimum size (MB) of a barcode directory to be included. Must be > 0. |
 
 ---
 
 **Output**
 
-| Option | Type | Default | Description |
-| --- | --- | --- | --- |
-| `--results_dir` | `path` | `./nextflow_results` | Directory where results are written. |
-| `--keep_bam_files` | `boolean` | `false` | Copy sorted BAM files and their indices to the results directory. |
+| Option             | Type      | Default              | Description                                                       |
+| ------------------ | --------- | -------------------- | ----------------------------------------------------------------- |
+| `--results_dir`    | `path`    | `./nextflow_results` | Directory where results are written.                              |
+| `--keep_bam_files` | `boolean` | `false`              | Copy sorted BAM files and their indices to the results directory. |
 
 ---
 
 **General**
 
-| Option | Type | Default | Description |
-| --- | --- | --- | --- |
+| Option   | Type      | Default | Description                      |
+| -------- | --------- | ------- | -------------------------------- |
 | `--help` | `boolean` | `false` | Print the help message and exit. |
 
 ### Advanced usage
@@ -238,12 +238,12 @@ By default Clair3 only calls variants on standard human chromosomes. For non-hum
 
 #### Profiles
 
-| Profile | Description |
-| --- | --- |
-| `standard` | Docker enabled (default). |
-| `docker` | Docker with user emulation. |
-| `singularity` | Singularity with auto-mounts. |
-| `conda` | Conda environments. |
+| Profile        | Description                                                                            |
+| -------------- | -------------------------------------------------------------------------------------- |
+| `standard`     | Docker enabled (default).                                                              |
+| `docker`       | Docker with user emulation.                                                            |
+| `singularity`  | Singularity with auto-mounts.                                                          |
+| `conda`        | Conda environments.                                                                    |
 | `sanger_local` | Singularity configured for Sanger HPC paths (`/lustre`, `/nfs`, `/software`, `/data`). |
 
 ### Dependencies
@@ -252,17 +252,17 @@ All software dependencies are containerised in publicly available Docker images.
 
 ## Software versions
 
-| Software | Version | Image |
-| --- | --- | --- |
-| NanoPlot | 1.38.0 | `quay.io/biocontainers/nanoplot:1.38.0--pyhdfd78af_0` |
-| PycoQC | 2.5.2 | `quay.io/biocontainers/pycoqc:2.5.2--py_0` |
-| Minimap2 | 2.17 | `quay.io/biocontainers/minimap2:2.17--hed695b0_3` |
-| Samtools | 1.15.1 | `quay.io/biocontainers/samtools:1.15.1--h1170115_0` |
-| Bedtools | 2.29.2 | `quay.io/biocontainers/bedtools:2.29.2--hc088bd4_0` |
-| Medaka | 1.4.4 | `quay.io/biocontainers/medaka:1.4.4--py38h130def0_0` |
-| FreeBayes | 1.3.5 | `docker.io/gfanz/freebayes@sha256:d32bbce0216754bfc7e01ad6af18e74df3950fb900de69253107dc7bcf4e1351` |
-| Clair3 | 1.0.0 | `docker.io/hkubal/clair3@sha256:3c4c6db3bb6118e3156630ee62de8f6afef7f7acc9215199f9b6c1b2e1926cf8` |
-| Tabix | 1.11 | `quay.io/biocontainers/tabix:1.11--hdfd78af_0` |
+| Software  | Version | Image                                                                                               |
+| --------- | ------- | --------------------------------------------------------------------------------------------------- |
+| NanoPlot  | 1.38.0  | `quay.io/biocontainers/nanoplot:1.38.0--pyhdfd78af_0`                                               |
+| PycoQC    | 2.5.2   | `quay.io/biocontainers/pycoqc:2.5.2--py_0`                                                          |
+| Minimap2  | 2.17    | `quay.io/biocontainers/minimap2:2.17--hed695b0_3`                                                   |
+| Samtools  | 1.15.1  | `quay.io/biocontainers/samtools:1.15.1--h1170115_0`                                                 |
+| Bedtools  | 2.29.2  | `quay.io/biocontainers/bedtools:2.29.2--hc088bd4_0`                                                 |
+| Medaka    | 1.4.4   | `quay.io/biocontainers/medaka:1.4.4--py38h130def0_0`                                                |
+| FreeBayes | 1.3.5   | `docker.io/gfanz/freebayes@sha256:d32bbce0216754bfc7e01ad6af18e74df3950fb900de69253107dc7bcf4e1351` |
+| Clair3    | 1.0.0   | `docker.io/hkubal/clair3@sha256:3c4c6db3bb6118e3156630ee62de8f6afef7f7acc9215199f9b6c1b2e1926cf8`   |
+| Tabix     | 1.11    | `quay.io/biocontainers/tabix:1.11--hdfd78af_0`                                                      |
 
 ## Troubleshooting
 
