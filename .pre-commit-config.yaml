@@ -1,0 +1,49 @@
+default_language_version:
+  # the version of python should match the python docker container used in CI
+  python: python3.13
+# versions of the modules and options should match those used in CI
+repos:
+  - repo: https://github.com/thoughtworks/talisman
+    rev: "v1.32.0"
+    hooks:
+      - id: talisman-commit
+        name: "Talisman (secrets detection)"
+        entry: cmd --githook pre-commit
+  - repo: https://github.com/jumanjihouse/pre-commit-hooks
+    rev: 3.0.0
+    hooks:
+      - id: shellcheck
+        name: "Shellcheck (shell script checker)"
+        args:
+          - --severity=warning
+          - --external-sources
+  # If your project contains python code, uncomment the sections for black, isort and flake8
+  # see also .gitlab-ci.yml, which will have black, isort and flake8 jobs disabled
+  #- repo: https://github.com/psf/black
+  #  rev: 24.3.0
+  #  hooks:
+  #    - id: black
+  #      name: "Black (Python formatter)"
+  #      args:
+  #        - --line-length=120
+  #- repo: https://github.com/pycqa/isort
+  #  rev: 5.13.2
+  #  hooks:
+  #    - id: isort
+  #      name: "isort (Python: sort imports)"
+  #- repo: https://github.com/pycqa/flake8
+  #  rev: 7.0.0
+  #  hooks:
+  #    - id: flake8
+  #      name: "Flake8 (Python linting)"
+  #      args:
+  #        - --max-line-length=120
+  - repo: https://github.com/pre-commit/mirrors-prettier
+    rev: v3.1.0
+    hooks:
+      - id: prettier
+        name: "Prettier (Formatter for Javascript, HTML, CSS, JSON, YAML, Markdown etc.)"
+        args: ["--no-config", "--ignore-path", ".eslintignore", "--write"]
+        additional_dependencies:
+          - prettier@3.1.0
+          - prettier-plugin-svelte@3.2.3
