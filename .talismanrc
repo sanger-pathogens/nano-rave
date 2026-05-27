@@ -1,0 +1,7 @@
+fileignoreconfig:
+- filename: README.md
+  # whitelist docker image hashes that appear in README.md
+  allowed_patterns: [
+    "docker.io/gfanz/freebayes@sha256:d32bbce0216754bfc7e01ad6af18e74df3950fb900de69253107dc7bcf4e1351",
+    "docker.io/hkubal/clair3@sha256:3c4c6db3bb6118e3156630ee62de8f6afef7f7acc9215199f9b6c1b2e1926cf8"
+  ]
