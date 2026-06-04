@@ -51,7 +51,7 @@ The pipeline was originally developed and applied to _Plasmodium falciparum_ amp
 
    > If no profile is specified the pipeline defaults to the `standard` profile (Docker enabled).
 
-4. Once the run has finished, clean up intermediate files:
+4. Once the run has finished successfully and you have inspected the output, clean up intermediate files. The `work/` directory and `.nextflow.log` are useful for troubleshooting — do not delete them until you are satisfied the outputs are correct:
 
    ```bash
    rm -rf work .nextflow*
