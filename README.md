@@ -271,7 +271,9 @@ All software dependencies are containerised in publicly available Docker images.
 - **PycoQC fails**: verify that the paths to FAST5/POD5 files in the sequencing summary file are absolute paths.
 - **Clair3 finds no variants**: if running on a non-human organism, add `--include_all_ctgs` or `--ctg_name <contig>` to `--clair3_args`.
 - **Resuming a failed run**: add `-resume` to your `nextflow run` or `nano-rave` command to restart from cached intermediate results.
-- For further help, check the Nextflow log (`.nextflow.log`) and the per-process logs in the `work/` directory.
+- For further help, check `.nextflow.log` and the per-process `.command.log` logs in the `work/` directory.
+
+Sanger users may find [this page](https://ssg-confluence.internal.sanger.ac.uk/spaces/PaMI/pages/181078206/General+pipeline+info#Generalpipelineinfo-Troubleshootingafailedpipelinerunandsendingabugreport) useful for troubleshooting Nextflow pipeline runs.
 
 ## Issues and Contributions
 
