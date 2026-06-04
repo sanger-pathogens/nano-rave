@@ -57,6 +57,8 @@ The pipeline was originally developed and applied to _Plasmodium falciparum_ amp
    rm -rf work .nextflow*
    ```
 
+   Alternatively, use `nextflow clean` for more fine-grained control over which runs and intermediate files are removed.
+
 #### Using on the Sanger farm
 
 The pipeline is available as an environment module on the Sanger HPC. Add the pathogen profile to your shell if not already present:
