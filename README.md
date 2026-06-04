@@ -30,7 +30,7 @@ The pipeline was originally developed and applied to _Plasmodium falciparum_ amp
 1. Clone this repository:
 
    ```bash
-   git clone https://github.com/sanger-pathogens/nano-rave.git
+   git clone <repo-url>
    cd nano-rave
    ```
 
